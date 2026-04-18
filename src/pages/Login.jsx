@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState } from "react";
 
 export default function LoginForm() {
@@ -90,9 +91,9 @@ export default function LoginForm() {
         {/* FOOTER */}
         <p className="text-gray-400 text-sm text-center mt-6">
           ¿No tienes cuenta?{" "}
-          <a href="/register" className="text-blue-400 hover:underline">
+          <Link to="/register" className="text-blue-400 hover:underline">
             Regístrate
-          </a>
+          </Link>
         </p>
       </div>
     </div>

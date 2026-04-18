@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function RegisterForm() {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
@@ -88,9 +90,9 @@ export default function RegisterForm() {
         {/* FOOTER */}
         <p className="text-gray-400 text-sm text-center mt-6">
           ¿Ya tienes cuenta?{' '}
-          <a href="/login" className="text-blue-400 hover:underline">
+          <Link to="/login" className="text-blue-400 hover:underline">
             Inicia sesión
-          </a>
+          </Link>
         </p>
       </div>
     </div>
