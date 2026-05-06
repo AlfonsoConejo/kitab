@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import React, { useState, useEffect } from 'react';
+import './../App.css';
 
 export default function RegisterForm() {
 
@@ -288,11 +289,11 @@ export default function RegisterForm() {
               !!errors.password
             }
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md font-semibold transition
+            className="flex justify-center w-full bg-blue-600 text-white py-2 rounded-md font-semibold transition
               hover:bg-blue-500 cursor-pointer
               disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
             >
-            Crear cuenta
+            {isSending ? <div className="loader "></div> : 'Crear cuenta' }
           </button>
         </form>
 
