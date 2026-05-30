@@ -134,7 +134,6 @@ export default function RegisterForm() {
         return;
       }
 
-      
       // Automatic login after register
       const resLogin = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
@@ -148,14 +147,25 @@ export default function RegisterForm() {
         credentials: "include"
       });
 
-      const dataLogin = await resLogin.json();
+      const loginData = await resLogin.json();
 
       if (!resLogin.ok) {
-        setServerError("Usuario registrado exitosamente. Error al iniciar sesión.");
+        setServerError(loginData.message || "Usuario o contraseña incorrectos");
         return;
       }
 
-      setUser(dataLogin.user);
+      const meRes = await fetch(`${API_URL}/api/auth/me`, {
+        credentials: "include"
+      });
+
+      const meData = await meRes.json();
+
+      if (!meRes.ok) {
+        setServerError(meData.message || "Usuario o contraseña incorrectos");
+        return;
+      }
+
+      setUser(meData.user);
       navigate("/app/home");
 
     } catch (error) {

@@ -23,7 +23,7 @@ export default function AppHeader({user}) {
         <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
           <a href="https://flowbite.com" className="flex items-center">
             <img src={Logo} className="mr-3 h-6 sm:h-9" alt="Site Logo" />
-            <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Flowbite</span>
+            <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Organizador</span>
           </a>
           <div
             style={{ backgroundColor: avatarColor }}
