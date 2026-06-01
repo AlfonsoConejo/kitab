@@ -1,5 +1,11 @@
 import Logo from '../../assets/logo-azul.png'
+import { useState, useRef, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
+
 export default function AppHeader({user}) {
+
+  const avatarRef = useRef(null);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // Array of colors for Avatar
   const colors = [
@@ -17,6 +23,47 @@ export default function AppHeader({user}) {
   const colorIndex = firstLetter.charCodeAt(0) % colors.length;
   const avatarColor = colors[colorIndex];
 
+  const handleSettings = () => {
+    console.log("Ajustes");
+    <Navigate
+      to="app/settings"
+    />;
+  };
+
+  const handleLogOut = () => {
+    console.log("Cerrar sesión");
+    <Navigate
+      to="/"
+    />;
+  };
+
+  useEffect(()=>{
+    const handleOutsideClick = (event) =>{
+      if(avatarRef.current && !avatarRef.current.contains(event.target)){
+        setIsProfileMenuOpen(false);
+      }      
+    }
+
+    // Mount event listener when site is loaded
+    document.addEventListener('mousedown', handleOutsideClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    }
+  },[]);
+
+  //Array of Avatar button options
+  const menuItems = [
+    {
+      label: "Configuración",
+      action: handleSettings,
+    },
+    {
+      label: "Cerrar sesión",
+      action: handleLogOut,
+    },
+  ];
+
   return(
     <header>
       <nav className="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
@@ -27,16 +74,43 @@ export default function AppHeader({user}) {
           </a>
           <div
             style={{ backgroundColor: avatarColor }}
-            className="
-              flex items-center justify-center
+            className={
+              `flex items-center justify-center
+              relative
               h-7 w-7 rounded-md
               text-white font-medium
               transition-all duration-300
-              hover:ring-3 hover:ring-gray-300/30
               cursor-pointer select-none
-            "
+              ${isProfileMenuOpen ? "ring-3 ring-gray-300/30" : "hover:ring-3 hover:ring-gray-300/30"}
+              `
+            }
+            ref={avatarRef}
+            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
           >
             {firstLetter}
+
+            {
+              isProfileMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-64 rounded-lg bg-gray-700 shadow-lg overflow-hidden">
+          
+                <div className="p-4 cursor-default">
+                  <p className="text-sm font-medium">{ `${user.first_name} ${user.last_name} `}</p>
+                  <p className="text-sm text-gray-400">{user.email}</p>
+                </div>
+
+                <div className="border-t border-gray-600 my-1" />
+
+                {menuItems.map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={item.action}
+                    className="w-full text-left text-sm px-4 py-2 hover:bg-slate-600 cursor-pointer"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>)
+            }
           </div>
         </div>
       </nav>
