@@ -1,6 +1,7 @@
 import Logo from '../../assets/logo-azul.png'
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner"
 
 export default function AppHeader({user, setUser, authLoading}) {
 
@@ -45,17 +46,17 @@ export default function AppHeader({user, setUser, authLoading}) {
       const resData = await res.json();
 
       if (!res.ok) {
-        setServerError(resData.message || "Error al cerrar sesión");
+        toast.error("Error al cerrar sesión");
         return;
       }
 
-      console.log("Cerrar sesión");
+      console.log("Antes:", user);
       setUser(null);
-      navigate("/");
+      toast.success("Sesión cerrada correctamente");
       
     } catch (error) {
       console.error(error);
-      setServerError("Error de red");
+      toast.error("Error al cerrar sesión");
     }
   };
 
@@ -88,11 +89,11 @@ export default function AppHeader({user, setUser, authLoading}) {
 
   return(
     <header>
-      <nav className="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
-        <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
+      <nav className=" border-gray-200 px-4 lg:px-6 py-2.5 bg-gray-800">
+        <div className="flex flex-wrap justify-between items-center mx-auto max-w-7x1">
           <a href="https://flowbite.com" className="flex items-center">
             <img src={Logo} className="mr-3 h-6 sm:h-9" alt="Site Logo" />
-            <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Organizador</span>
+            <span className="self-center text-xl font-semibold whitespace-nowrap text-white">Organizador</span>
           </a>
           <div className='relative text-white' ref={avatarRef}>
             <div
