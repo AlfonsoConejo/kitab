@@ -11,7 +11,7 @@ export default function LoginForm() {
 
   const from = location.state?.from?.pathname || "/app/home";
 
-  const { user, setUser, authLoading } = useAuth();
+  const { setUser } = useAuth();
   const API_URL = import.meta.env.VITE_API_URL;
 
   // States
@@ -23,6 +23,8 @@ export default function LoginForm() {
     password: ""
   });
   const [serverError, setServerError] = useState("");
+
+  // Validate errors right after opening page
   const isSubmitDisabled =
   !formData.email.trim() ||
   !formData.password ||
@@ -138,11 +140,14 @@ export default function LoginForm() {
 
 
   return (
-    <div className="min-h-dvh w-full bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-dvh w-full bg-gray-900 flex items-center justify-center px-4 py-4">
       <div className="w-full max-w-md">
-        <Link to="/">
-          <img className='w-16 h-auto m-auto' src={logo} alt="site logo" />
-        </Link>
+
+        <div className='w-full flex justify-center items-center'>
+          <Link to="/">
+            <img className='w-16 h-auto' src={logo} alt="site logo" />
+          </Link>
+        </div>
         
         <div className="w-full max-w-md mt-4 bg-gray-800 border border-gray-700 rounded-2xl p-8 shadow-xl">
         
