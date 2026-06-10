@@ -1,6 +1,20 @@
 import { CalendarDays } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useState } from "react";
 
 export default function CreatePeriod() {
+
+  // States
+  const [formData, setFormData] = useState({ name: '', startDate: '', endDate: '', color: '#EF4444'});
+  const [isSending, setIsSending] = useState(false);
+  const [serverError, setServerError] = useState("");
+  // Validate errors right after opening page
+  const isSubmitDisabled =
+  !formData.name ||
+  !formData.startDate ||
+  !formData.endDate ||
+  !formData.color ||
+  isSending;
 
   const PERIOD_COLORS = [
     "#EF4444", // Red
@@ -36,6 +50,23 @@ export default function CreatePeriod() {
     "#DB2777",
   ];
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleColorChange = (color) => {
+    setFormData(prev => ({
+      ...prev,
+      color
+    }));
+  };
+
+  console.log(formData);
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,7 +76,8 @@ export default function CreatePeriod() {
         </h1>
       </div>
 
-      <div className="max-w-3xl rounded-3xl border border-gray-800 bg-gray-800 p-8">
+      <div className="max-w-2xl rounded-3xl border border-gray-800 bg-gray-800 p-8">
+        {/* Header*/}
         <div className="flex items-center gap-3 mb-8">
           <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-cyan-900/40">
             <CalendarDays size={24} />
@@ -62,8 +94,9 @@ export default function CreatePeriod() {
           </div>
         </div>
 
+        {/* Form */}
         <form className="flex flex-col gap-6">
-          {/* Nombre */}
+          {/* Name */}
           <div className="flex flex-col gap-2">
             <label
               htmlFor="name"
@@ -73,11 +106,15 @@ export default function CreatePeriod() {
             </label>
 
             <input
+              onChange={handleChange}
               id="name"
+              name="name"
               type="text"
               placeholder="Ej. Agosto - Diciembre 2026"
+              maxLength={30}
+              value={formData.name}
               className="
-                rounded-xl
+                rounded-lg
                 border
                 border-gray-700
                 bg-gray-900
@@ -91,7 +128,7 @@ export default function CreatePeriod() {
             />
           </div>
 
-          {/* Fechas */}
+          {/* Dates */}
           <div className="grid gap-6 md:grid-cols-2">
             <div className="flex flex-col gap-2">
               <label
@@ -102,10 +139,13 @@ export default function CreatePeriod() {
               </label>
 
               <input
+                onChange={handleChange}
                 id="startDate"
+                name="startDate"
                 type="date"
                 className="
-                  rounded-xl
+                value={formData.startDate}
+                  rounded-lg
                   border
                   border-gray-700
                   bg-gray-900
@@ -127,10 +167,13 @@ export default function CreatePeriod() {
               </label>
 
               <input
+                onChange={handleChange}
                 id="endDate"
+                name="endDate"
                 type="date"
+                value={formData.endDate}
                 className="
-                  rounded-xl
+                  rounded-lg
                   border
                   border-gray-700
                   bg-gray-900
@@ -144,19 +187,42 @@ export default function CreatePeriod() {
             </div>
           </div>
           
-<div className="grid grid-cols-6 gap-3">
-  {PERIOD_COLORS.map((color) => (
-    <button
-      key={color}
-      type="button"
-      className="h-10 w-10 rounded-full border-2 border-gray-700"
-      style={{ backgroundColor: color }}
-    />
-  ))}
-</div>
+          <div className="w-full flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-300" >
+              Color
+            </label>
+            <div
+              className="
+                grid grid-flow-col
+                grid-rows-3 justify-between
+                gap-y-6 w-full
+              "
+            >
 
-          {/* Resumen */}
-          <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-4">
+              {PERIOD_COLORS.map((color) => (
+                <button
+                  onClick={() => handleColorChange(color)}
+                  key={color}
+                  type="button"
+                  className={`
+                    h-11
+                    w-11
+                    rounded-lg
+                    ${
+                      formData.color === color
+                        ? 'border-3 border-white'
+                        : 'border-2 border-gray-700'
+                      }
+                    cursor-pointer
+                  `}
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4">
             <h3 className="font-medium text-white">
               Recomendaciones
             </h3>
@@ -167,42 +233,47 @@ export default function CreatePeriod() {
               </li>
 
               <li>
-                • La fecha de inicio debe ser anterior a la de finalización.
-              </li>
-
-              <li>
                 • Podrás editar el periodo posteriormente.
               </li>
             </ul>
           </div>
 
-          {/* Botones */}
+          {/* Buttons */}
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Link to="/app/periods"
               type="button"
               className="
-                rounded-xl
+                rounded-lg
                 border
                 border-gray-700
-                px-5
-                py-3
+                px-4
+                py-2
                 text-gray-300
                 hover:bg-gray-800
+                cursor-pointer
+                text-sm
+                transition: colors
               "
             >
               Cancelar
-            </button>
+            </Link>
 
             <button
+             disabled={isSubmitDisabled}
               type="submit"
               className="
-                rounded-xl
-                bg-cyan-600
-                px-5
-                py-3
-                font-medium
+                rounded-lg
+                bg-sky-600
+                px-4
+                py-2
+                font-semibold
+                text-sm
                 text-white
-                hover:bg-cyan-500
+                hover:bg-sky-500
+                cursor-pointer
+                transition: colors
+
+                disabled:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50
               "
             >
               Crear periodo
