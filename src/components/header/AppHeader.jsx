@@ -1,6 +1,6 @@
 import Logo from '../../assets/logo-azul.png'
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { notify } from '@/utils';
 
 export default function AppHeader({user, setUser}) {
@@ -91,10 +91,12 @@ export default function AppHeader({user, setUser}) {
     <header>
       <nav className=" border-gray-200 px-4 lg:px-6 py-2.5 bg-gray-800">
         <div className="flex flex-wrap justify-between items-center mx-auto max-w-7x1">
-          <a href="https://flowbite.com" className="flex items-center">
-            <img src={Logo} className="mr-3 h-6 sm:h-9" alt="Site Logo" />
+          {/* Logo */}
+          <Link to="/app/dashboard" className="flex items-center">
+            <img src={Logo} className="mr-3 h-6 sm:h-9" alt="Site logo" />
             <span className="self-center text-xl font-semibold whitespace-nowrap text-white">Organizador</span>
-          </a>
+          </Link>
+          
           <div className='relative text-white' ref={avatarRef}>
             <div
               style={{ backgroundColor: avatarColor }}

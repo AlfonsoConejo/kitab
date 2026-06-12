@@ -1,6 +1,7 @@
 import { CalendarDays } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { apiFetch } from "../services/apiFetch.js";
 
 export default function CreatePeriod() {
 
@@ -100,30 +101,30 @@ export default function CreatePeriod() {
     setServerError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/periods`, {
+      const res = await apiFetch("/api/periods", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(cleanedData),
-        credentials: "include"
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setServerError(data.message || "No se pudo crear el periodo");
+        setServerError(data.message || "No se pudo crear el periodo");    
         return;
       }
       navigate('/app/periods');
     } catch (error) {
+      if (error.message === "SESSION_EXPIRED") {
+        return;
+      }
       setServerError("Error en el servidor");
     } finally {
       setIsSending(false);
     }
   }
-
-  console.log(formData);
 
   return (
     <div className="flex flex-col gap-6">
@@ -152,7 +153,7 @@ export default function CreatePeriod() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6" autoComplete="off">
           {/* Name */}
           <div className="flex flex-col gap-2">
             <label
@@ -276,7 +277,7 @@ export default function CreatePeriod() {
 
                     ${
                       formData.color === color
-                        ? 'ring-2 ring-white scale-110'
+                        ? 'ring-2 ring-white'
                         : 'border-2 border-gray-700'
                     }
                   `}
@@ -304,7 +305,7 @@ export default function CreatePeriod() {
           </div>
 
           {serverError && (
-            <div className="bg-red-500/10 border border-red-500 text-red-400 p-2 rounded mb-4 text-sm">
+            <div className="bg-red-500/10 border border-red-500 text-red-400 p-2 rounded text-sm">
               {serverError}
             </div>
           )}
@@ -346,7 +347,7 @@ export default function CreatePeriod() {
                 disabled:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50
               "
             >
-              Crear periodo
+              {isSending ? <div className="loader "></div> : 'Crear periodo' }
             </button>
           </div>
         </form>

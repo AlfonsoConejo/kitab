@@ -8,7 +8,6 @@ export default function AppLayout() {
   console.log(user, authLoading);
 
   if (authLoading) {
-    console.log("Está cargando");
     return <p>Cargando Aplicación</p>;
   }
 
