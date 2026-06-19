@@ -12,8 +12,8 @@ export default function Inicio() {
     <div className="min-h-dvh w-full bg-slate-950 bg-gradient-to-b from-blue-900/30 via-slate-950 to-slate-950">
       {/* CENTER WRAPPER */}
       <div className="mx-auto flex min-h-dvh max-w-7xl justify-center ">
-        <section className="relative w-full px-6 pt-32 pb-20">
-          <div className="relative z-10 mx-auto w-full">
+        <section className=" w-full px-6 pt-18 sm:pt-32 pb-20">
+          <div className=" z-10 mx-auto w-full">
             {/* Texto */}
             <div className="mx-auto max-w-4xl text-center">
               <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
@@ -54,7 +54,7 @@ export default function Inicio() {
 
             {/* Screenshot */}
             <div className="mt-20 flex justify-center">
-              <div className="relative w-full max-w-5xl">
+              <div className="w-full max-w-5xl">
                 <img
                   src={demo_periodos}
                   alt="Vista previa de Organizador"
