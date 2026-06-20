@@ -166,11 +166,11 @@ export default function Inicio() {
                   {/* Botón de la Pregunta */}
                   <button
                     onClick={() => toggleFAQ(index)}
-                    className="w-full flex justify-between items-center p-5 text-left text-white font-medium hover:bg-slate-900/40 transition-colors cursor-pointer"
+                    className="w-full flex justify-between items-center p-5 text-left text-white font-medium hover:bg-slate-900/40 transition-colors gap-2 cursor-pointer"
                   >
                     <span>{faq.question}</span>
                     <ChevronDown 
-                      className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${
+                      className={`w-5 h-5 min-w-5 min-h-5 text-slate-400 transition-transform duration-300 ${
                         isOpen ? "rotate-180 text-blue-500" : ""
                       }`}
                     />

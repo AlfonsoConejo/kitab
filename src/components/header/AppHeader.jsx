@@ -2,6 +2,7 @@ import Logo from '../../assets/logo-azul.png'
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { notify } from '@/utils';
+import { useClickOutside } from '@/customHooks/useClickOutside';
 
 export default function AppHeader({user, setUser}) {
 
@@ -11,6 +12,7 @@ export default function AppHeader({user, setUser}) {
   
   const avatarRef = useRef(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  useClickOutside(avatarRef, () => setIsProfileMenuOpen(false));
 
   // Array of colors for Avatar
   const colors = [
@@ -59,21 +61,6 @@ export default function AppHeader({user, setUser}) {
       notify("error", "Error al cerrar sesión.");
     }
   };
-
-  useEffect(()=>{
-    const handleOutsideClick = (event) =>{
-      if(avatarRef.current && !avatarRef.current.contains(event.target)){
-        setIsProfileMenuOpen(false);
-      }      
-    }
-
-    // Mount event listener when site is loaded
-    document.addEventListener('mousedown', handleOutsideClick);
-
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    }
-  },[]);
 
   //Array of Avatar button options
   const menuItems = [
