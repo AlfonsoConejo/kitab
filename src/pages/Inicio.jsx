@@ -153,8 +153,11 @@ export default function Inicio() {
             Demo del Progreso
           </h2>
           <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
-            Cada dos semanas, una nueva versión. Este es el recorrido real de Kitab,
-            desde el primer commit hasta hoy.
+            {/*Cada dos semanas, una nueva versión. Este es el recorrido real de Kitab,
+            desde el primer commit hasta hoy.*/}
+            Sigue la evolución de Kitab versión por versión. Cada sprint documenta nuevas 
+            funcionalidades, decisiones técnicas y avances del producto desde el primer 
+            commit hasta hoy.
           </p>
           
           <div>

@@ -18,52 +18,54 @@ import Subjects from './pages/Subjects';
 import Breaks from './pages/Breaks';
 import PeriodForm from './pages/PeriodForm';
 import Sprints from './pages/Sprints';
+import ScrollToTop from './components/ScrollToTop';
 
 export default function App() {
   return (
-    <Routes>
+    <> 
+      <ScrollToTop />
+      <Routes>
+        {/* Public */}
+        <Route element={<PublicOnlyRoute />}>
 
-      {/* Public */}
-      <Route element={<PublicOnlyRoute />}>
+          {/* Landing */}
+          <Route path="/" element={<LandingLayout />}>
+            <Route index element={<Inicio />} />
+            <Route path="features" element={<Features />} />
+            <Route path="about" element={<About />} />
+            <Route path="sprints" element={<Sprints />} />
+           </Route>
 
-        {/* Landing */}
-        <Route path="/" element={<LandingLayout />}>
-          <Route index element={<Inicio />} />
-          <Route path="features" element={<Features />} />
-          <Route path="about" element={<About />} />
-          <Route path="sprints" element={<Sprints />} />
+          {/* Auth */}
+          <Route path="/auth" element={<AuthLayout />}>
+            <Route path="signup" element={<Register />} />
+            <Route path="login" element={<LoginForm />} />
+          </Route>
+
         </Route>
 
-        {/* Auth */}
-        <Route path="/auth" element={<AuthLayout />}>
-          <Route path="signup" element={<Register />} />
-          <Route path="login" element={<LoginForm />} />
+
+        {/* Private */}
+        <Route element={<ProtectedRoute />}>
+
+          {/* App */}
+          <Route path="/app" element={<AppLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route index element={<Navigate to="dashboard" />} />
+
+            <Route path="periods" element={<Period />} />
+            <Route path="periods/new" element={<PeriodForm />} />
+            <Route path="periods/:id/edit" element={<PeriodForm />} />
+
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="tasks" element={<Tasks />} />
+            <Route path="tests" element={<Tests />} />
+            <Route path="subjects" element={<Subjects />} />
+            <Route path="breaks" element={<Breaks />} />
+          </Route>
+
         </Route>
-
-      </Route>
-
-
-      {/* Private */}
-      <Route element={<ProtectedRoute />}>
-
-        {/* App */}
-        <Route path="/app" element={<AppLayout />}>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route index element={<Navigate to="dashboard" />} />
-
-          <Route path="periods" element={<Period />} />
-          <Route path="periods/new" element={<PeriodForm />} />
-          <Route path="periods/:id/edit" element={<PeriodForm />} />
-
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="tasks" element={<Tasks />} />
-          <Route path="tests" element={<Tests />} />
-          <Route path="subjects" element={<Subjects />} />
-          <Route path="breaks" element={<Breaks />} />
-        </Route>
-
-      </Route>
-
-    </Routes>
+      </Routes>
+    </>
   );
 }
