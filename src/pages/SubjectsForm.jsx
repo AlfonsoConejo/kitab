@@ -1,12 +1,20 @@
-import { useParams } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import { BookOpen, NotebookPen } from "lucide-react";
 import colors from "@/data/colors.js";
 import { useClickOutside } from "@/customHooks/useClickOutside.jsx";
 import ClassForm from "@/components/ClassForm.jsx";
 import { Link } from "react-router-dom";
+import { usePeriod } from "@/context/PeriodContext";
 
 export default function SubjectsForm() {
+
+  //Get period from context
+  const { selectedPeriod} = usePeriod();
+
+  if (!selectedPeriod) {
+    return <Navigate to="/app/periods" replace />;
+  }
 
   //Detect if it is a Creation Form or an Edition Form
   const { id } = useParams();
@@ -14,12 +22,16 @@ export default function SubjectsForm() {
 
   //States
   const [subject, setSubject] = useState({ 
-    periodId: '', 
+    periodId: selectedPeriod.id, 
     name: '', 
     teacher: '', 
     color: '#EF4444',
+    startDate: selectedPeriod.startDate,
+    endDate: selectedPeriod.endDate,
     classes: [],
   });
+
+  console.log("Materia:", subject)
 
   const areClassesValid =
     subject.classes.length === 0 ||
@@ -30,6 +42,10 @@ export default function SubjectsForm() {
       c.startTime < c.endTime
     );
 
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [serverError, setServerError] = useState("");
+
   // Validate errors right after opening page
   const isSubmitDisabled =
     !subject.periodId ||
@@ -38,10 +54,6 @@ export default function SubjectsForm() {
     !subject.color ||
     isSending ||
     !areClassesValid;
-
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [serverError, setServerError] = useState("");
 
   const colorPickerRef = useRef(null);
   useClickOutside(colorPickerRef, () => setIsColorPickerOpen(false));
@@ -52,14 +64,28 @@ export default function SubjectsForm() {
       classes: [
         ...prev.classes,
         {
-          day: "",
-          startTime: "",
-          endTime: "",
+          days: [],
+          type: "theory",
+          mode: "onsite",
           classroom: "",
+          startTime: "",
+          endTime: ""
         },
       ],
     }));
   }
+
+  const [isManualDate, setIsManualDate] = useState(false);
+
+  function usePeriodDates() {
+  setIsManualDate(false);
+
+  setSubject((prev) => ({
+    ...prev,
+    startDate: selectedPeriod.startDate,
+    endDate: selectedPeriod.endDate,
+  }));
+}
 
   function handleClassChange(index, field, value) {
     setSubject((prev) => ({
@@ -75,8 +101,13 @@ export default function SubjectsForm() {
   const handleSubjectChange = (e) => {
     setServerError("");
 
-    const { name, value } = e.target;
+    let { name, value } = e.target;
 
+    //Only letters allowed in teacher name field
+    if (name === "teacher") {
+      value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "");
+    }
+    
     setSubject(prev => ({
       ...prev,
       [name]: value
@@ -176,7 +207,7 @@ export default function SubjectsForm() {
                     name="name"
                     type="text"
                     placeholder="Geomática"
-                    maxLength={50}
+                    maxLength={40}
                     value={subject.name}
                     className="
                       rounded-lg
@@ -235,20 +266,23 @@ export default function SubjectsForm() {
                     <button
                       type="button"
                       onClick={() => setIsColorPickerOpen((prev) => !prev)}
-                      className="
+                      className={`
                         w-full
                         flex
                         items-center
                         justify-between
                         rounded-lg
                         border
-                        border-gray-700
-                        bg-gray-900
                         px-4
                         py-3
-                        hover:border-gray-600
                         transition-colors
-                      "
+                        bg-gray-900
+
+                        ${isColorPickerOpen 
+                          ? "border-cyan-600"
+                          : "border-gray-700"
+                        }
+                      `}
                     >
                       <div className="flex items-center gap-3">
                         <div
@@ -278,59 +312,170 @@ export default function SubjectsForm() {
                       </svg>
                     </button>
 
-                      {isColorPickerOpen && (
-                        <div
-                          className="
-                            absolute
-                            left-0
-                            mt-2
-                            w-full
-                            rounded-xl
-                            border
-                            border-gray-700
-                            bg-gray-900
-                            p-4
-                            shadow-xl
-                            z-50
+                    {isColorPickerOpen && (
+                      <div
+                        className="
+                          absolute
+                          left-0
+                          mt-2
+                          w-full
+                          rounded-xl
+                          border
+                          border-gray-700
+                          bg-gray-900
+                          p-4
+                          shadow-xl
+                          z-50
                           "
-                        >
-                          <div className="grid grid-cols-4 lg:grid-cols-6 gap-3">
-                            {colors.map((color) => (
-                              <button
-                                key={color}
-                                type="button"
-                                onClick={() => {
-                                  handleColorChange(color);
-                                  setIsColorPickerOpen(false);
-                                }}
-                                className={`
-
-                                  h-6
-                                  w-6
-                                  md:h-7
-                                  md:w-7
-                                  lg:h-8
-                                  lg:w-8
-                                  rounded-full
-                                  transition-all
-                                  cursor-pointer
-                                  hover:scale-110
-                                  ${
-                                    subject.color === color
-                                      ? "ring-2 ring-white"
-                                      : ""
-                                  }
-                                `}
-                                style={{ backgroundColor: color }}
-                              />
-                            ))}
-                          </div>
+                      >
+                        <div className="grid grid-cols-4 lg:grid-cols-6 gap-3">
+                          {colors.map((color) => (
+                            <button
+                              key={color}
+                              type="button"
+                              onClick={() => {
+                                handleColorChange(color);
+                                setIsColorPickerOpen(false);
+                              }}
+                              className={`
+                                h-6
+                                w-6
+                                md:h-7
+                                md:w-7
+                                lg:h-8
+                                lg:w-8
+                                rounded-full
+                                transition-all
+                                cursor-pointer
+                                hover:scale-110
+                                ${
+                                  subject.color === color
+                                    ? "ring-2 ring-white"
+                                    : ""
+                                }
+                              `}
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
+
+                {/* Switch for date selection */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Fechas de inicio y término
+                  </label>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={usePeriodDates}
+                      className={`
+                        px-3 py-2
+                        rounded-lg
+                        text-sm font-semibold
+                        transition-colors
+                        cursor-pointer
+
+                        ${
+                          !isManualDate
+                            ? "bg-cyan-600 text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        }
+                      `}
+                    >
+                      {"Periodo académico"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsManualDate(true)}
+                      className={`
+                        px-3 py-2
+                        rounded-lg
+                        text-sm font-semibold
+                        transition-colors
+                        cursor-pointer
+
+                        ${
+                          isManualDate
+                            ? "bg-cyan-600 text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        }
+                      `}
+                    >
+                      {"Manual"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+
+              {/* Start Date */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Fecha de inicio
+                </label>
+
+                <input
+                  name="startDate"
+                  type="date"
+                  disabled={!isManualDate} 
+                  value={subject.startDate}
+                  min={selectedPeriod.startDate}
+                  max={isManualDate ? subject.endDate : selectedPeriod.endDate}
+                  onChange={handleSubjectChange}
+                  className="
+                    rounded-lg
+                    border
+                    border-gray-700
+                    bg-gray-900
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                    focus:border-cyan-600
+
+                    disabled: disabled:cursor-not-allowed disabled:opacity-50
+                  "
+                />
+              </div>
+
+              {/* End Date */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Fecha de término
+                </label>
+
+                <input
+                  type="date"
+                  name="endDate"
+                  disabled={!isManualDate} 
+                  value={subject.endDate}
+                  min={isManualDate ? subject.startDate : selectedPeriod.startDate}
+                  max={selectedPeriod.endDate}
+                  onChange={handleSubjectChange}
+                  className={`
+                    rounded-lg
+                    border
+                    border-gray-700
+                    bg-gray-900
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                    focus:border-cyan-600
+
+                    disabled: disabled:cursor-not-allowed disabled:opacity-50
+                  `}
+                />
+              </div>
+          </div>
 
             {/* Classes information */}
             <div>
@@ -362,6 +507,7 @@ export default function SubjectsForm() {
                 ))}
               </div>
 
+              {/* "Add class" button */}
               <div className="flex ">
                 <button
                   type="button"

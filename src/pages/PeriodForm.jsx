@@ -46,8 +46,8 @@ export default function PeriodForm() {
 
         setFormData({
           name: data.data.name,
-          startDate: data.data.start_date?.split("T")[0],
-          endDate: data.data.end_date?.split("T")[0],
+          startDate: data.data.startDate?.split("T")[0],
+          endDate: data.data.endDate?.split("T")[0],
           color: data.data.color,
         });
 

@@ -16,13 +16,15 @@ export default function Period() {
   const [periodToDelete, setPeriodToDelete] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log("Periods", periods)
+
   const upcomingPeriods = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     return periods.filter((period) => {
       
-      const start = new Date(period.start_date);
+      const start = new Date(period.startDate);
       start.setHours(0, 0, 0, 0);
 
       return start > today;
@@ -35,10 +37,10 @@ export default function Period() {
     today.setHours(0, 0, 0, 0);
 
     return periods.filter((period) => {
-      const start = new Date(period.start_date);
+      const start = new Date(period.startDate);
       start.setHours(0, 0, 0, 0);
 
-      const end = new Date(period.end_date);
+      const end = new Date(period.endDate);
       end.setHours(0, 0, 0, 0);
 
       return start <= today && end >= today;
@@ -51,7 +53,7 @@ export default function Period() {
 
     return periods.filter((period) => {
       
-      const end = new Date(period.end_date);
+      const end = new Date(period.endDate);
       end.setHours(0, 0, 0, 0);
       
       return end < today;
@@ -106,7 +108,6 @@ export default function Period() {
   }
 
   async function handleDeletedPeriod(period) {
-    console.log("Este es el ID del periodo: " + period.id);
     try {
       const res = await apiFetch(`/api/periods/${period.id}`, {
         method: "DELETE",
@@ -226,12 +227,17 @@ function PeriodCard({
   onEdit,
   onDelete,
 }) {
-  const formatDate = (date) =>
-    new Date(date).toLocaleDateString("es-MX", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+  
+  const formatDate = (dateString) => {
+    const [year, month, day] = dateString.split("-");
+
+    const months = [
+      "ene", "feb", "mar", "abr", "may", "jun",
+      "jul", "ago", "sep", "oct", "nov", "dic"
+    ];
+
+    return `${Number(day)} ${months[Number(month) - 1]} ${year}`;
+  };
 
   return (
     <div
@@ -266,9 +272,9 @@ function PeriodCard({
             </div>
             
             <p className="text-sm text-gray-400 mt-1">
-              {formatDate(period.start_date)}
+              {formatDate(period.startDate)}
               {" → "}
-              {formatDate(period.end_date)}
+              {formatDate(period.endDate)}
             </p>
 
             <div className="mt-4">
