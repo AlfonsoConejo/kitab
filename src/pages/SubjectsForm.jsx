@@ -1,6 +1,6 @@
 import { useParams, Navigate } from "react-router-dom";
 import { useState, useRef } from "react";
-import { BookOpen, NotebookPen } from "lucide-react";
+import { BookOpen, NotebookPen, ChevronDown } from "lucide-react";
 import colors from "@/data/colors.js";
 import { useClickOutside } from "@/customHooks/useClickOutside.jsx";
 import ClassForm from "@/components/ClassForm.jsx";
@@ -8,9 +8,10 @@ import { Link } from "react-router-dom";
 import { usePeriod } from "@/context/PeriodContext";
 
 export default function SubjectsForm() {
-
+  
   //Get period from context
   const { selectedPeriod} = usePeriod();
+  console.log("Periodo seleccioando: ", selectedPeriod)
 
   if (!selectedPeriod) {
     return <Navigate to="/app/periods" replace />;
@@ -31,32 +32,9 @@ export default function SubjectsForm() {
     classes: [],
   });
 
-  console.log("Materia:", subject)
-
-  const areClassesValid =
-    subject.classes.length === 0 ||
-    subject.classes.every((c) =>
-      c.days?.length > 0 &&
-      c.startTime &&
-      c.endTime &&
-      c.startTime < c.endTime
-    );
-
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [serverError, setServerError] = useState("");
-
-  // Validate errors right after opening page
-  const isSubmitDisabled =
-    !subject.periodId ||
-    !subject.name.trim() ||
-    !subject.teacher.trim() ||
-    !subject.color ||
-    isSending ||
-    !areClassesValid;
-
-  const colorPickerRef = useRef(null);
-  useClickOutside(colorPickerRef, () => setIsColorPickerOpen(false));
 
   function addClass() {
     setSubject((prev) => ({
@@ -64,6 +42,7 @@ export default function SubjectsForm() {
       classes: [
         ...prev.classes,
         {
+          tempId: crypto.randomUUID(),
           days: [],
           type: "theory",
           mode: "onsite",
@@ -75,26 +54,57 @@ export default function SubjectsForm() {
     }));
   }
 
+  //Validate if all clases have complete information
+  const areClassesValid =
+  subject.classes.length === 0 ||
+  subject.classes.every((c) =>
+    c.days?.length > 0 &&
+    c.type &&
+    c.mode &&
+    c.startTime &&
+    c.endTime
+  );
+
+  // Validate errors right after opening page
+  const isSubmitDisabled =
+    !subject.periodId ||
+    !subject.name.trim() ||
+    !subject.color ||
+    !subject.startDate ||
+    !subject.endDate||
+    isSending ||
+    !areClassesValid;
+
+  const colorPickerRef = useRef(null);
+  useClickOutside(colorPickerRef, () => setIsColorPickerOpen(false));
+
   const [isManualDate, setIsManualDate] = useState(false);
 
   function usePeriodDates() {
-  setIsManualDate(false);
+    setIsManualDate(false);
 
-  setSubject((prev) => ({
-    ...prev,
-    startDate: selectedPeriod.startDate,
-    endDate: selectedPeriod.endDate,
-  }));
-}
-
-  function handleClassChange(index, field, value) {
     setSubject((prev) => ({
       ...prev,
-      classes: prev.classes.map((item, i) =>
-        i === index
-          ? { ...item, [field]: value }
-          : item
+      startDate: selectedPeriod.startDate,
+      endDate: selectedPeriod.endDate,
+    }));
+  }
+
+  function handleClassChange(tempId, field, value) {
+    setSubject((prev) => ({
+      ...prev,
+      classes: prev.classes.map((classItem) =>
+        classItem.tempId === tempId
+          ? { ...classItem, [field]: value }
+          : classItem
       ),
+    }));
+  }
+
+  function handleDeleteClass(tempId) {
+    setSubject((prev) => ({
+      ...prev,
+      classes: prev.classes.filter((classItem) => classItem.tempId !== tempId),
     }));
   }
 
@@ -230,7 +240,10 @@ export default function SubjectsForm() {
                     htmlFor="teacher"
                     className="text-sm font-medium text-gray-300"
                   >
-                    Nombre del profesor
+                    Nombre del profesor{" "}
+                    <span className="font-normal text-gray-500">
+                      (opcional)
+                    </span>
                   </label>
 
                   <input
@@ -294,22 +307,15 @@ export default function SubjectsForm() {
                           Seleccionar color
                         </span>
                       </div>
-
-                      <svg
-                        className={`w-4 h-4 text-gray-400 transition-transform ${
-                          isColorPickerOpen ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      
+                      <ChevronDown className={`
+                        h-5
+                        w-5
+                        text-gray-400
+                        transition-transform
+                        ${isColorPickerOpen ? "rotate-180" : ""}
+                        `}
+                      />
                     </button>
 
                     {isColorPickerOpen && (
@@ -498,11 +504,12 @@ export default function SubjectsForm() {
               <div className="flex flex-col gap-4">
                 {subject.classes.map((classItem, index) => (
                   <ClassForm
-                    key={index}
+                    key={classItem.tempId}
                     classData={classItem}
                     onChange={(field, value) =>
-                      handleClassChange(index, field, value)
+                      handleClassChange(classItem.tempId, field, value)
                     }
+                    onDelete={() => handleDeleteClass(classItem.tempId)}
                   />
                 ))}
               </div>

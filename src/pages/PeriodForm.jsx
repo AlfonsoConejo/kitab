@@ -42,12 +42,10 @@ export default function PeriodForm() {
           return;
         }
 
-        console.log(data);
-
         setFormData({
           name: data.data.name,
-          startDate: data.data.startDate?.split("T")[0],
-          endDate: data.data.endDate?.split("T")[0],
+          startDate: data.data.startDate,
+          endDate: data.data.endDate,
           color: data.data.color,
         });
 
@@ -143,7 +141,7 @@ export default function PeriodForm() {
       }
 
       if (isEditMode && Number(selectedPeriod?.id) === Number(id)) {
-        setSelectedPeriod(data.period);
+        setSelectedPeriod(data.data);
       }
 
       navigate('/app/periods');
