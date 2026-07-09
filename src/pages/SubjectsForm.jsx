@@ -10,7 +10,7 @@ import { usePeriod } from "@/context/PeriodContext";
 export default function SubjectsForm() {
   
   //Get period from context
-  const { selectedPeriod} = usePeriod();
+  const { selectedPeriod } = usePeriod();
   console.log("Periodo seleccioando: ", selectedPeriod)
 
   if (!selectedPeriod) {
@@ -135,29 +135,78 @@ export default function SubjectsForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    //Cleanead class data
+    const cleanSubjectData = {
+      periodId: selectedPeriod.id, 
+      name: formData.name.trim(),
+      teacher: formData.teacher.trim(),
+      color: formData.color,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+    };
+
+    //Cleanead class data
+    const cleanClassesData = formData.classes.map(({
+      days,
+      type,
+      mode,
+      classroom,
+      startTime,
+      endTime
+    }) => ({
+      days,
+      type: type?.trim(),
+      mode: mode?.trim(),
+      classroom: classroom?.trim() || null,
+      startTime: startTime?.trim(),
+      endTime: endTime?.trim(),
+    }));
+
     setIsSending(true);
+
+    //Clean setServerError message
     setServerError("");
 
-    try {
-      const payload = {
-        ...subject,
-        classes: subject.classes.map((c) => ({
-          days: c.days,
-          start_time: c.startTime,
-          end_time: c.endTime,
-          classroom: c.classroom,
-        })),
-      };
+    let subjectId
 
-      const res = await fetch("/api/subjects", {
+    try {
+
+      // Send subject to database
+      const resSubjects = await fetch(`/api/periods/${selectedPeriod.id}/subjects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(cleanSubjectData),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      const subjectData = await resSubjects.json();
+
+      if (!resSubjects.ok) {
+        notify("error", `${subjectData.message} || Error al guardar la materia y sus clases`);
+        navigate('/app/periods');
+        return;
+      }
+
+      subjectId = subjectData.subject.id;
+
+      // Send classes to database
+      const resClasses = await fetch(`/api/classes/${subjectId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cleanClassesData),
+      });
+
+      const classesData = await resClasses.json();
+
+      if (!resClasses.ok) {
+          notify("error", `${classesData.message} || No se pudieron guardar las clases`);
+        return;
+      }
+
+      navigate('/app/periods');
 
     } catch (err) {
       setServerError(err.message);
