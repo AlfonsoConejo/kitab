@@ -1,4 +1,4 @@
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, useNavigate  } from "react-router-dom";
 import { useState, useRef } from "react";
 import { BookOpen, NotebookPen, ChevronDown } from "lucide-react";
 import colors from "@/data/colors.js";
@@ -6,9 +6,13 @@ import { useClickOutside } from "@/customHooks/useClickOutside.jsx";
 import ClassForm from "@/components/ClassForm.jsx";
 import { Link } from "react-router-dom";
 import { usePeriod } from "@/context/PeriodContext";
+import { notify } from "@/utils";
+import { apiFetch } from "@/services/apiFetch";
 
 export default function SubjectsForm() {
   
+  const navigate = useNavigate();
+
   //Get period from context
   const { selectedPeriod } = usePeriod();
   console.log("Periodo seleccioando: ", selectedPeriod)
@@ -93,11 +97,24 @@ export default function SubjectsForm() {
   function handleClassChange(tempId, field, value) {
     setSubject((prev) => ({
       ...prev,
-      classes: prev.classes.map((classItem) =>
-        classItem.tempId === tempId
-          ? { ...classItem, [field]: value }
-          : classItem
-      ),
+      classes: prev.classes.map((classItem) => {
+        if (classItem.tempId !== tempId) {
+          return classItem;
+        }
+
+        if (field === "mode" && value === "online") {
+          return {
+            ...classItem,
+            mode: value,
+            classroom: null,
+          };
+        }
+
+        return {
+          ...classItem,
+          [field]: value,
+        };
+      }),
     }));
   }
 
@@ -135,44 +152,39 @@ export default function SubjectsForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    //Cleanead class data
+    //Cleanead subject data
     const cleanSubjectData = {
-      periodId: selectedPeriod.id, 
-      name: formData.name.trim(),
-      teacher: formData.teacher.trim(),
-      color: formData.color,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
+      name: subject.name.trim(),
+      teacher: subject.teacher.trim(),
+      color: subject.color,
+      startDate: subject.startDate,
+      endDate: subject.endDate,
+      classes: subject.classes.map(({
+        days,
+        type,
+        mode,
+        classroom,
+        startTime,
+        endTime,
+      }) => ({
+        days,
+        type: type?.trim(),
+        mode: mode?.trim(),
+        classroom: classroom?.trim() || null,
+        startTime: startTime?.trim(),
+        endTime: endTime?.trim(),
+      })),
     };
-
-    //Cleanead class data
-    const cleanClassesData = formData.classes.map(({
-      days,
-      type,
-      mode,
-      classroom,
-      startTime,
-      endTime
-    }) => ({
-      days,
-      type: type?.trim(),
-      mode: mode?.trim(),
-      classroom: classroom?.trim() || null,
-      startTime: startTime?.trim(),
-      endTime: endTime?.trim(),
-    }));
 
     setIsSending(true);
 
     //Clean setServerError message
     setServerError("");
 
-    let subjectId
-
     try {
 
       // Send subject to database
-      const resSubjects = await fetch(`/api/periods/${selectedPeriod.id}/subjects`, {
+      const resSubjects = await apiFetch(`/api/periods/${selectedPeriod.id}/subjects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -183,33 +195,16 @@ export default function SubjectsForm() {
       const subjectData = await resSubjects.json();
 
       if (!resSubjects.ok) {
-        notify("error", `${subjectData.message} || Error al guardar la materia y sus clases`);
-        navigate('/app/periods');
+        setServerError(subjectData.message);
         return;
       }
 
-      subjectId = subjectData.subject.id;
-
-      // Send classes to database
-      const resClasses = await fetch(`/api/classes/${subjectId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(cleanClassesData),
-      });
-
-      const classesData = await resClasses.json();
-
-      if (!resClasses.ok) {
-          notify("error", `${classesData.message} || No se pudieron guardar las clases`);
-        return;
-      }
-
-      navigate('/app/periods');
+      notify("success", "Materia guardada correctamente.");
+      navigate("/app/subjects");
 
     } catch (err) {
-      setServerError(err.message);
+      notify("error", "No fue posible conectar con el servidor.");
+      console.error(err);
     } finally {
       setIsSending(false);
     }
@@ -585,6 +580,12 @@ export default function SubjectsForm() {
                 </button>
               </div>
             </div>
+
+            {serverError && (
+              <div className="bg-red-500/10 border border-red-500 text-red-400 p-2 rounded text-sm">
+                {serverError}
+              </div>
+            )}
 
             {/* Buttons */}
             <div className="flex justify-end gap-3 pt-2">
