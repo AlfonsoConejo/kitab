@@ -1,4 +1,4 @@
-export const formatDate = (dateString) => {
+export const formatDate = (dateString, endDateString = null) => {
   const [year, month, day] = dateString.split("-");
 
   const months = [
@@ -6,10 +6,23 @@ export const formatDate = (dateString) => {
     "jul", "ago", "sep", "oct", "nov", "dic"
   ];
 
+  if (endDateString) {
+    const [endYear] = endDateString.split("-");
+
+    if (year === endYear) {
+      return `${Number(day)} ${months[Number(month) - 1]}`;
+    }
+  }
+
   return `${Number(day)} ${months[Number(month) - 1]} ${year}`;
 };
 
 export const getClassDays = (classes) => {
+
+  if (!classes || classes.length === 0) {
+    return "Sin clases";
+  }
+
   const dayNames = {
     1: "Lun",
     2: "Mar",

@@ -169,11 +169,11 @@ function SubjectCard({ subject }) {
       <div className="mt-5 flex items-center gap-2 text-gray-300">
         <CalendarDays size={18} />
         <span>
-          {formatDate(subject.startDate)} — {formatDate(subject.endDate)}
+          {formatDate(subject.startDate, subject.endDate)} - {formatDate(subject.endDate)}
         </span>
       </div>
 
-      <div className="mt-5 flex items-center gap-2 text-gray-300">
+      <div className="mt-2 flex items-center gap-2 text-gray-300">
         <User size={18} />
         <span>
           {subject.teacher || "Sin profesor asignado"}
