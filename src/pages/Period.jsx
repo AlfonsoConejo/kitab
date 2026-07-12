@@ -6,6 +6,7 @@ import { notify } from "@/utils";
 import { Pencil, Trash2 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { usePeriod } from "@/context/PeriodContext";
+import { formatDate } from "@/functions";
 
 export default function Period() {
 
@@ -227,17 +228,6 @@ function PeriodCard({
   onEdit,
   onDelete,
 }) {
-  
-  const formatDate = (dateString) => {
-    const [year, month, day] = dateString.split("-");
-
-    const months = [
-      "ene", "feb", "mar", "abr", "may", "jun",
-      "jul", "ago", "sep", "oct", "nov", "dic"
-    ];
-
-    return `${Number(day)} ${months[Number(month) - 1]} ${year}`;
-  };
 
   return (
     <div

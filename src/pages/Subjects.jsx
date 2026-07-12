@@ -1,17 +1,20 @@
 import NoActivePeriodMessage from "@/components/NoActivePeriodMessage";
 import EmptySection from "@/components/EmptySection";
 import { apiFetch } from "@/services/apiFetch";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { notify } from "@/utils";
 import { usePeriod } from "@/context/PeriodContext";
-import { BookOpen } from "lucide-react";
+import { BookOpen, CalendarDays, User } from "lucide-react";
+import { formatDate, getClassDays } from "@/functions";
 
 export default function Subjects() {
   const { selectedPeriod } = usePeriod();
   const [subjects, setSubjects] = useState([]);
   const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  console.log("Clases: ", classes);
 
   // Fetch all subjects and classes of the period
   useEffect(() => {
@@ -69,6 +72,22 @@ export default function Subjects() {
     fetchData();
   }, [selectedPeriod?.id]);
 
+  const subjectsWithClasses = useMemo(() => {
+    const classesBySubject = classes.reduce((acc, cls) => {
+      if (!acc[cls.subjectId]) {
+        acc[cls.subjectId] = [];
+      }
+
+      acc[cls.subjectId].push(cls);
+
+      return acc;
+    }, {});
+
+    return subjects.map((subject) => ({
+      ...subject,
+      classes: classesBySubject[subject.id] ?? [],
+    }));
+  }, [subjects, classes]);
 
   let content;
 
@@ -87,7 +106,7 @@ export default function Subjects() {
       />
     );
   } else {
-    content = <SubjectsList subjects={subjects} />;
+    content = <SubjectsList subjects={subjectsWithClasses} />;
   }
   return(
     <div className="flex flex-col flex-1 gap-6">
@@ -105,6 +124,68 @@ export default function Subjects() {
 
       <div className="flex-1">
         {content}
+      </div>
+    </div>
+  );
+}
+
+function SubjectsList({subjects}) {
+  return(
+    <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
+      {
+        subjects.map((subject) => (
+          <SubjectCard key={subject.id} subject={subject} />
+        ))
+      }
+    </div>
+  )
+}
+
+function SubjectCard({ subject }) {
+  console.log(subject);
+  return (
+    <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
+      {/* Header */}
+      <div className="flex gap-3 justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className="h-4 w-4 rounded-full"
+            style={{ backgroundColor: subject.color }}
+          />
+
+          <h3 className="text-xl font-semibold text-white">
+            {subject.name}
+          </h3>
+        </div>
+
+        <div className="inline-flex items-center justify-center text-xs bg-gray-700 px-3 py-1 rounded-lg text-gray-300">
+          <span>
+            {getClassDays(subject.classes)}
+          </span>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="mt-5 flex items-center gap-2 text-gray-300">
+        <CalendarDays size={18} />
+        <span>
+          {formatDate(subject.startDate)} — {formatDate(subject.endDate)}
+        </span>
+      </div>
+
+      <div className="mt-5 flex items-center gap-2 text-gray-300">
+        <User size={18} />
+        <span>
+          {subject.teacher || "Sin profesor asignado"}
+        </span>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-6 flex items-center justify-end">
+
+        <button className="rounded-lg font-semibold text-white bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm transition cursor-pointer">
+          Ver materia
+        </button>
       </div>
     </div>
   );
