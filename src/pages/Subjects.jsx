@@ -5,15 +5,18 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { notify } from "@/utils";
 import { usePeriod } from "@/context/PeriodContext";
-import { BookOpen, CalendarDays, User } from "lucide-react";
+import { BookOpen, CalendarDays, User, Trash2 } from "lucide-react";
 import { formatDate, getClassDays } from "@/functions";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function Subjects() {
   const { selectedPeriod } = usePeriod();
+  const [subjectToDelete, setSubjectToDelete] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log("Materias: ", subjects);
   console.log("Clases: ", classes);
 
   // Fetch all subjects and classes of the period
@@ -91,6 +94,29 @@ export default function Subjects() {
 
   let content;
 
+  async function handleDeletedSubject(subject) {
+    try {
+      const res = await apiFetch(`/api/subjects/${subject.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        notify("error", "No se pudo eliminar la materia");
+        return;
+      }
+
+      setSubjects((prev) =>
+        prev.filter((s) => s.id !== subject.id)
+      );
+
+      setClasses((prev) =>
+        prev.filter((c) => c.subjectId !== subject.id)
+      );
+    } catch {
+      notify("error", "Error de conexión");
+    }
+  }
+
   if (isLoading) {
     content = <div className="text-center p-6">Cargando materias...</div>;
   } else if (!selectedPeriod) {
@@ -106,7 +132,7 @@ export default function Subjects() {
       />
     );
   } else {
-    content = <SubjectsList subjects={subjectsWithClasses} />;
+    content = <SubjectsList subjects={subjectsWithClasses} setSubjectToDelete={setSubjectToDelete}/>;
   }
   return(
     <div className="flex flex-col flex-1 gap-6">
@@ -125,24 +151,40 @@ export default function Subjects() {
       <div className="flex-1">
         {content}
       </div>
+
+      {subjectToDelete && (
+        <ConfirmModal
+          title="Eliminar materia"
+          message={`¿Seguro que deseas eliminar "${subjectToDelete.name}"?`}
+          variant="danger"
+          onClose={() => setSubjectToDelete(null)}
+          onConfirm={() => {
+            handleDeletedSubject(subjectToDelete);
+            setSubjectToDelete(null);
+          }}
+        />
+      )}
+
     </div>
   );
 }
 
-function SubjectsList({subjects}) {
+function SubjectsList({subjects, setSubjectToDelete}) {
   return(
     <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
       {
         subjects.map((subject) => (
-          <SubjectCard key={subject.id} subject={subject} />
+          <SubjectCard 
+            key={subject.id}
+            subject={subject}
+            onDelete={setSubjectToDelete}/>
         ))
       }
     </div>
   )
 }
 
-function SubjectCard({ subject }) {
-  console.log(subject);
+function SubjectCard({ subject, onDelete }) {
   return (
     <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
       {/* Header */}
@@ -158,15 +200,30 @@ function SubjectCard({ subject }) {
           </h3>
         </div>
 
-        <div className="inline-flex items-center justify-center text-xs bg-gray-700 px-3 py-1 rounded-lg text-gray-300">
-          <span>
-            {getClassDays(subject.classes)}
-          </span>
-        </div>
+        <button
+          onClick={() => onDelete?.(subject)}
+          className="
+            p-2
+            rounded-lg
+          text-red-400
+          hover:bg-red-500/10
+            transition-colors
+            cursor-pointer
+          "
+        >
+          <Trash2 size={16} />
+        </button>
+        
       </div>
 
       {/* Body */}
-      <div className="mt-5 flex items-center gap-2 text-gray-300">
+      <div className="mt-3 inline-flex items-center justify-center text-xs bg-gray-700 px-3 py-1 rounded-lg text-gray-300">
+        <span>
+          {getClassDays(subject.classes)}
+        </span>    
+      </div>
+
+      <div className="mt-3 flex items-center gap-2 text-gray-300">
         <CalendarDays size={18} />
         <span>
           {formatDate(subject.startDate, subject.endDate)} - {formatDate(subject.endDate)}
