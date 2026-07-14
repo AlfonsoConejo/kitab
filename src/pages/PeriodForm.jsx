@@ -6,7 +6,6 @@ import { useParams } from "react-router-dom";
 import { notify } from "@/utils.jsx";
 import { usePeriod } from "@/context/PeriodContext.jsx";
 import ColorPicker from "@/components/ColorPicker.jsx";
-import colors from "@/data/colors.js";
 
 export default function PeriodForm() {
 
@@ -289,7 +288,6 @@ export default function PeriodForm() {
           </div>
           
           <ColorPicker
-            colors={colors}
             value={formData.color}
             onChange={handleColorChange}
           />

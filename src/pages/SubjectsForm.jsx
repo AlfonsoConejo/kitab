@@ -1,13 +1,13 @@
 import { useParams, Navigate, useNavigate  } from "react-router-dom";
 import { useState, useRef } from "react";
-import { BookOpen, NotebookPen, ChevronDown } from "lucide-react";
-import colors from "@/data/colors.js";
+import { BookOpen, NotebookPen } from "lucide-react";
 import { useClickOutside } from "@/customHooks/useClickOutside.jsx";
 import ClassForm from "@/components/ClassForm.jsx";
 import { Link } from "react-router-dom";
 import { usePeriod } from "@/context/PeriodContext";
 import { notify } from "@/utils";
 import { apiFetch } from "@/services/apiFetch";
+import ColorPicker from "@/components/ColorPicker";
 
 export default function SubjectsForm() {
   
@@ -315,102 +315,10 @@ export default function SubjectsForm() {
 
                 {/* Color */}
                 <div className="flex flex-col gap-2" >
-                  <label className="text-sm font-medium text-gray-300">
-                    Color
-                  </label>
-
-                  <div className="relative w-full" ref={colorPickerRef}>
-                    <button
-                      type="button"
-                      onClick={() => setIsColorPickerOpen((prev) => !prev)}
-                      className={`
-                        w-full
-                        flex
-                        items-center
-                        justify-between
-                        rounded-lg
-                        border
-                        px-4
-                        py-3
-                        transition-colors
-                        bg-gray-900
-
-                        ${isColorPickerOpen 
-                          ? "border-cyan-600"
-                          : "border-gray-700"
-                        }
-                      `}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-5 h-5 rounded-full border border-white/20"
-                          style={{ backgroundColor: subject.color }}
-                        />
-
-                        <span className="text-gray-300">
-                          Seleccionar color
-                        </span>
-                      </div>
-                      
-                      <ChevronDown className={`
-                        h-5
-                        w-5
-                        text-gray-400
-                        transition-transform
-                        ${isColorPickerOpen ? "rotate-180" : ""}
-                        `}
-                      />
-                    </button>
-
-                    {isColorPickerOpen && (
-                      <div
-                        className="
-                          absolute
-                          left-0
-                          mt-2
-                          w-full
-                          rounded-xl
-                          border
-                          border-gray-700
-                          bg-gray-900
-                          p-4
-                          shadow-xl
-                          z-50
-                          "
-                      >
-                        <div className="grid grid-cols-4 lg:grid-cols-6 gap-3">
-                          {colors.map((color) => (
-                            <button
-                              key={color}
-                              type="button"
-                              onClick={() => {
-                                handleColorChange(color);
-                                setIsColorPickerOpen(false);
-                              }}
-                              className={`
-                                h-6
-                                w-6
-                                md:h-7
-                                md:w-7
-                                lg:h-8
-                                lg:w-8
-                                rounded-full
-                                transition-all
-                                cursor-pointer
-                                hover:scale-110
-                                ${
-                                  subject.color === color
-                                    ? "ring-2 ring-white"
-                                    : ""
-                                }
-                              `}
-                              style={{ backgroundColor: color }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <ColorPicker
+                    value={subject.color}
+                    onChange={handleColorChange}
+                  />
                 </div>
 
                 {/* Switch for date selection */}
