@@ -191,7 +191,7 @@ function SubjectCard({ subject, onDelete }) {
       <div className="flex gap-3 justify-between">
         <div className="flex items-center gap-3">
           <div
-            className="h-4 w-4 rounded-full"
+            className="h-5 w-5 rounded-full"
             style={{ backgroundColor: subject.color }}
           />
 

@@ -147,10 +147,10 @@ export default function Period() {
         ) : periods.length === 0 ? (
           <NoActivePeriodMessage />
         ) : (
-          <div className="w-full rounded-lg border border-gray-800 bg-gray-800 p-6 flex flex-col gap-3">
+          <div className="w-full flex flex-col gap-3">
             
             {upcomingPeriods.length > 0 && (
-              <div className="w-full flex flex-col gap-2">
+              <div className="w-full flex flex-col gap-3">
                  <h2 className="text-xl font-semibold">
                     Próximamente ({upcomingPeriods.length})
                   </h2>
@@ -170,7 +170,7 @@ export default function Period() {
             
             
             {currentPeriods.length > 0 && (
-              <div className="w-full flex flex-col gap-2">
+              <div className="w-full flex flex-col gap-3">
                 <h2 className="text-xl font-semibold">En curso ({currentPeriods.length})</h2>
                 <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
                   {currentPeriods.map((period) => (
@@ -187,7 +187,7 @@ export default function Period() {
             )}
             
             {previousPeriods.length > 0 && (
-              <div className="w-full flex flex-col gap-2">
+              <div className="w-full flex flex-col gap-3">
                 <h2 className="text-xl font-semibold">Finalizados ({previousPeriods.length})</h2>
                 <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
                   {previousPeriods.map((period) => (
@@ -236,6 +236,7 @@ function PeriodCard({
         overflow-hidden
         rounded-xl
         border
+        border-gray-700
         bg-gray-800
         transition-all
 
@@ -250,15 +251,16 @@ function PeriodCard({
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <div className="grid grid-cols-[1fr_auto] items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div
+                className="h-5 w-5 rounded-full shrink-0"
+                style={{ backgroundColor: period.color }}
+              />
               <h3 className="truncate text-lg font-bold text-white -translate-y-0.5">
                 {period.name}
               </h3>
 
-              <div
-                className="h-5 w-5 rounded-sm"
-                style={{ backgroundColor: period.color }}
-              />
+              
             </div>
             
             <p className="text-sm text-gray-400 mt-1">
