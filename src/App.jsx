@@ -20,6 +20,7 @@ import PeriodForm from './pages/PeriodForm';
 import Sprints from './pages/Sprints';
 import ScrollToTop from './components/ScrollToTop';
 import SubjectsForm from './pages/SubjectsForm';
+import SubjectDetails from './pages/SubjectDetails';
 
 export default function App() {
   return (
@@ -63,7 +64,7 @@ export default function App() {
             {/* Subjects */}
             <Route path="subjects" element={<Subjects />} />
             <Route path="subjects/new" element={<SubjectsForm />} />
-            <Route path="subjects/:id/edit" element={<SubjectsForm />} />
+            <Route path="subjects/:id" element={<SubjectDetails />} />
 
             <Route path="calendar" element={<Calendar />} />
             <Route path="tasks" element={<Tasks />} />

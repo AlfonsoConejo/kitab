@@ -240,9 +240,9 @@ function SubjectCard({ subject, onDelete }) {
       {/* Footer */}
       <div className="mt-6 flex items-center justify-end">
 
-        <button className="rounded-lg font-semibold text-white bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm transition cursor-pointer">
+        <Link to={`/app/subjects/${subject.id}`} className="rounded-lg font-semibold text-white bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm transition cursor-pointer">
           Ver materia
-        </button>
+        </Link>
       </div>
     </div>
   );
