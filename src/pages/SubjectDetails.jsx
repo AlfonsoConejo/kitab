@@ -77,7 +77,7 @@ export default function SubjectDetails() {
         </Link>
       </div>
 
-      {/* Subject cards */}
+      {/* Subject header cards */}
       <div className="">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <div className="flex items-center gap-4 rounded-lg bg-gray-800 border border-gray-700 p-4">
@@ -122,9 +122,28 @@ export default function SubjectDetails() {
         </div>
       </div>
 
+      {/* Subject classes cards */}
       <h2 className="text-xl font-semibold">
         Clases
       </h2>
+      {subject.classes.length === 0 ? (
+        <p className="text-gray-400">Sin clases. Edita la materia para agregar clases.</p>
+      ) : (
+        subject.classes.map((classItem) => (
+          <ClassCard key={classItem.id} classData={{...classItem}} />
+        ))
+      )}
     </div>    
   );
+}
+
+function ClassCard(classData){
+  console.log('This is the class data: ', classData.classData.startTime)
+  return(
+    <div className="rounded-lg bg-gray-800 border border-gray-700 p-4">
+      <div>
+        {classData.startTime}
+      </div>
+    </div>
+  )
 }
