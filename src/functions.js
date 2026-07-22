@@ -17,7 +17,17 @@ export const formatDate = (dateString, endDateString = null) => {
   return `${Number(day)} ${months[Number(month) - 1]} ${year}`;
 };
 
-const DAY_NAMES = {
+export function formatTime(time, hour12 = true) {
+  const date = new Date(`1970-01-01T${time}`);
+
+  return new Intl.DateTimeFormat("es-MX", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12,
+  }).format(date);
+}
+
+export const DAY_NAMES = {
   1: "Lun",
   2: "Mar",
   3: "Mié",

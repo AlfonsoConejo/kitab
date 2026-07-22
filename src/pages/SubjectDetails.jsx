@@ -2,8 +2,26 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { apiFetch } from "../services/apiFetch.js";
 import { notify } from "@/utils.jsx";
-import { User, CalendarDays} from "lucide-react"
-import { formatDate } from "@/functions.js";
+import { User, CalendarDays, Clock3, MapPin, Laptop, Building2, FlaskConical, Wrench, Notebook, Paintbrush} from "lucide-react"
+import { DAY_NAMES, formatDate, formatTime } from "@/functions.js";
+
+const typeMap = {
+  theory: {
+    label: "Teoría",
+    icon: <Notebook size={18} />,
+    color: "bg-blue-500/20 text-blue-300"
+  },
+  laboratory: {
+    label: "Laboratorio",
+    icon: <FlaskConical size={18} />,
+    color: "bg-green-500/20 text-green-300"
+  },
+  workshop: {
+    label: "Taller",
+    icon: <Wrench size={18} />,
+    color: "bg-orange-500/20 text-orange-300"
+  }
+};
 
 export default function SubjectDetails() {
 
@@ -81,17 +99,15 @@ export default function SubjectDetails() {
       <div className="">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <div className="flex items-center gap-4 rounded-lg bg-gray-800 border border-gray-700 p-4">
-            <div
-              className="h-5 w-5 rounded-full border border-gray-600"
-              style={{ backgroundColor: subject.color }}
-            />
-            <div>
+            <Paintbrush className="text-gray-400" size={22} />
+            <div className="flex flex-col gap-1">
               <p className="text-xs uppercase tracking-wide text-gray-400">
                 Color
               </p>
-              <p className="text-sm text-gray-100">
-                Materia
-              </p>
+              <div
+                className="h-4 w-15 rounded-full border border-gray-600"
+                style={{ backgroundColor: subject.color }}
+              />
             </div>
           </div>
 
@@ -137,13 +153,66 @@ export default function SubjectDetails() {
   );
 }
 
-function ClassCard(classData){
-  console.log('This is the class data: ', classData.classData.startTime)
-  return(
-    <div className="rounded-lg bg-gray-800 border border-gray-700 p-4">
-      <div>
-        {classData.startTime}
+function ClassCard({ classData }) {
+  const type = typeMap[classData.type];
+
+  return (
+    <div className="rounded-lg border border-gray-700 bg-gray-800 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      
+      {/* Columna Izquierda: Tipo, Horario y Aula */}
+      <div className="flex flex-col gap-3">
+        
+        {/* Type and mode labels */}
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${type.color}`}>
+            {type.icon}
+            <span>{type.label}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            {classData.mode === "online" ? <Laptop size={14} /> : <Building2 size={14} />}
+            <span>{classData.mode === "online" ? "En línea" : "Presencial"}</span>
+          </div>
+        </div>
+
+        {/* Time and classroom */}
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-white">
+            <Clock3 className="text-gray-400" size={16} />
+            <span className="text-lg font-semibold tracking-tight">
+              {formatTime(classData.startTime)}
+            </span>
+            <span className="text-gray-600">—</span>
+            <span className="text-lg font-semibold tracking-tight">
+              {formatTime(classData.endTime)}
+            </span>
+          </div>
+
+          {classData.mode === 'onsite' && (
+            <div className="flex items-center gap-1 text-xs font-semibold text-gray-300 bg-gray-700 px-2 py-0.5 rounded-md">
+              <MapPin size={12} className="text-gray-300" />
+              <span>{classData.classroom}</span>
+            </div>
+          )}
+        </div>
+
       </div>
+
+      {/* Columna Derecha: Días de la semana */}
+      <div className="flex flex-col md:items-end gap-1.5 border-t border-gray-800/50 pt-3 md:border-none md:pt-0">
+        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 md:pl-0">Días</span>
+        <div className="flex gap-1">
+          {classData.days.map(day => (
+            <span
+              key={day}
+              className="rounded-md px-2 py-0.5 text-xs font-semibold bg-gray-700 text-gray-300"
+            >
+              {DAY_NAMES[day]}
+            </span>
+          ))}
+        </div>
+      </div>
+
     </div>
-  )
+  );
 }

@@ -27,8 +27,6 @@ const ClassForm = ({ classData, onChange, onDelete }) => {
     onChange("days", newDays);
   }
 
-  const [isManualDate, setIsManualDate] = useState(false);
-
   return (
     <div className="rounded-xl border border-gray-700 p-5 flex flex-col gap-6">
 
@@ -115,7 +113,7 @@ const ClassForm = ({ classData, onChange, onDelete }) => {
             >
               <option value="theory">Teoría</option>
               <option value="laboratory">Laboratorio</option>
-              <option value="workpshop">Taller</option>
+              <option value="workshop">Taller</option>
             </select>
 
             <ChevronDown
