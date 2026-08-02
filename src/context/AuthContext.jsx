@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
         if (resMe.ok) {
           const dataMe = await resMe.json();
 
-          setUser(dataMe.user);
+          setUser(dataMe.data.user);
         } else {
 
           // ACCESS TOKEN EXPIRED -> REFRESH
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
 
           const dataMe = await resMe.json();
 
-          setUser(dataMe.user);
+          setUser(dataMe.data.user);
         }
       } catch (error) {
         console.error(error);

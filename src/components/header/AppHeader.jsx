@@ -25,7 +25,7 @@ export default function AppHeader({user, setUser}) {
   ];
 
   // Create avatar icon
-  const firstLetter = user.first_name[0].toUpperCase();
+  const firstLetter = user.firstName[0].toUpperCase();
   const colorIndex = firstLetter.charCodeAt(0) % colors.length;
   const avatarColor = colors[colorIndex];
 
@@ -51,7 +51,6 @@ export default function AppHeader({user, setUser}) {
         return;
       }
 
-      console.log("Antes:", user);
       setUser(null);
       notify("success", "Sesión cerrada.");
       
@@ -106,7 +105,7 @@ export default function AppHeader({user, setUser}) {
               <div className="absolute right-0 top-full mt-2 w-64 rounded-lg bg-gray-700 shadow-lg overflow-hidden">
           
                 <div className="p-4 cursor-default">
-                  <p className="text-sm font-medium">{ `${user.first_name} ${user.last_name} `}</p>
+                  <p className="text-sm font-medium">{ `${user.firstName} ${user.lastName} `}</p>
                   <p className="text-sm text-gray-400">{user.email}</p>
                 </div>
 

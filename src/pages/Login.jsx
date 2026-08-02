@@ -117,13 +117,13 @@ export default function LoginForm() {
       });
 
       const meData = await meRes.json();
-
+      
       if (!meRes.ok) {
         setServerError(meData.message || "Usuario o contraseña incorrectos");
         return;
       }
 
-      setUser(meData.user);
+      setUser(meData.data.user);
       navigate(from, { replace: true });
 
     } catch (error) {
