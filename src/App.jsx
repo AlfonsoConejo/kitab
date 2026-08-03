@@ -8,7 +8,6 @@ import Inicio from './pages/Inicio';
 import Dashboard from './pages/Dashboard';
 import AuthLayout from './layouts/AuthLayout';
 import ProtectedRoute from './components/ProtectedRoute';
-import PublicOnlyRoute from './components/PublicOnlyRoute';
 import AppLayout from './layouts/AppLayout';
 import Period from './pages/Period';
 import Calendar from './pages/Calendar';
@@ -21,33 +20,50 @@ import Sprints from './pages/Sprints';
 import ScrollToTop from './components/ScrollToTop';
 import SubjectsForm from './pages/SubjectsForm';
 import SubjectDetails from './pages/SubjectDetails';
+import Loader from './components/Loader';
+import { useAuth } from './customHooks/useAuth';
 
 export default function App() {
+  const { user, authLoading} = useAuth();
+
+   if (authLoading) return <Loader />
+
   return (
     <> 
       <ScrollToTop />
       <Routes>
-        {/* Public */}
-        <Route element={<PublicOnlyRoute />}>
 
-          {/* Landing */}
-          <Route path="/" element={<LandingLayout />}>
-            <Route index element={<Inicio />} />
-            <Route path="features" element={<Features />} />
-            <Route path="about" element={<About />} />
-            <Route path="sprints" element={<Sprints />} />
-           </Route>
+        {/* Landing */}
+        <Route 
+          path="/" 
+          element={
+            user ? <Navigate to="/app/dashboard" replace /> : <LandingLayout />
+          }
+        >
+          <Route index element={<Inicio />} />
+          <Route path="features" element={<Features />} />
+          <Route path="about" element={<About />} />
+          <Route path="sprints" element={<Sprints />} />
+        </Route>
 
-          {/* Auth */}
-          <Route path="/auth" element={<AuthLayout />}>
-            <Route path="signup" element={<Register />} />
-            <Route path="login" element={<LoginForm />} />
-          </Route>
-
+        {/* Auth */}
+        <Route path="/auth" element={<AuthLayout />}>
+          <Route 
+            path="login" 
+            element={
+              user ? <Navigate to="/app/dashboard" replace /> : <LoginForm />
+            } 
+          />
+          <Route 
+            path="signup" 
+            element={
+              user ? <Navigate to="/app/dashboard" replace /> : <Register />
+            } 
+          />
         </Route>
 
 
-        {/* Private */}
+        {/* Private routes*/}
         <Route element={<ProtectedRoute />}>
 
           {/* App */}
