@@ -1,3 +1,4 @@
+/*Acá terminan los estilos del loader*/
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
 @import "tailwindcss";
@@ -24,7 +25,6 @@
   letter-spacing: 0.18px;
   color-scheme: light;
   color: var(--text);
-  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -35,13 +35,21 @@
   }
 }
 
+/* Fondo unificado para toda la página */
+html {
+  background-color: var(--bg);
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   min-height: 100dvh;
+  background-color: transparent; /* ← Hereda de html */
 }
 
+/* Si el contenido es corto, el body crece para llenar */
 html, body {
-  background-color: var(--bg);
+  height: 100%;
 }
 
 /*Acá empiezan los estilos del main-loader*/
@@ -62,64 +70,64 @@ html, body {
     background-position: 100% 100%, 50% 0, 0 100%;
   }
 }
-/*.main-loader {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 6rem;
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-  }
-  .main-loader:before,
-  .main-loader:after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    animation: pulsOut 1.8s ease-in-out infinite;
 
-    filter: drop-shadow(
-      0 0 1rem rgba(115, 191, 253, 0.8)
-    );
-  }
-  .main-loader:before {
-    width: 100%;
-    padding-bottom: 100%;
-    box-shadow: inset 0 0 0 1rem #4A82F9;
-    animation-name: pulsIn;
-  }
-  .main-loader:after {
-    width: calc(100% - 2rem);
-    padding-bottom: calc(100% - 2rem);
-    box-shadow: 0 0 0 0 #4A82F9;
-  }
+/*.main-loader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 6rem;
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+.main-loader:before,
+.main-loader:after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  animation: pulsOut 1.8s ease-in-out infinite;
+
+  filter: drop-shadow(
+    0 0 1rem rgba(115, 191, 253, 0.8)
+  );
+}
+.main-loader:before {
+  width: 100%;
+  padding-bottom: 100%;
+  box-shadow: inset 0 0 0 1rem #4A82F9;
+  animation-name: pulsIn;
+}
+.main-loader:after {
+  width: calc(100% - 2rem);
+  padding-bottom: calc(100% - 2rem);
+  box-shadow: 0 0 0 0 #4A82F9;
+}
 
 
  @keyframes pulsIn {
-    0% {
-      box-shadow: inset 0 0 0 1rem #4A82F9;
-      opacity: 1;
-    }
-
-    50%,100% {
-      box-shadow: inset 0 0 0 0 #4A82F9;
-      opacity: 0;
-    }
+  0% {
+    box-shadow: inset 0 0 0 1rem #4A82F9;
+    opacity: 1;
   }
 
-  @keyframes pulsOut {
-    0%,50% {
-      box-shadow: 0 0 0 0 #4A82F9;
-      opacity: 0;
-    }
+  50%,100% {
+    box-shadow: inset 0 0 0 0 #4A82F9;
+    opacity: 0;
+  }
+}
 
-    100% {
-      box-shadow: 0 0 0 1rem #4A82F9;
-      opacity: 1;
-    }
-  }*/
-/*Acá terminan los estilos del loader*/
+@keyframes pulsOut {
+  0%,50% {
+    box-shadow: 0 0 0 0 #4A82F9;
+    opacity: 0;
+  }
+
+  100% {
+    box-shadow: 0 0 0 1rem #4A82F9;
+    opacity: 1;
+  }
+}*/
 
 .logo {
   font-family: 'Comfortaa', sans-serif;
