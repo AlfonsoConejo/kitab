@@ -6,6 +6,7 @@ import { notify } from "@/utils";
 import { Pencil, Trash2, CheckCircle, Circle } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { usePeriod } from "@/context/PeriodContext";
+import SectionLoader from "@/components/SectionLoader";
 import { formatDate } from "@/functions";
 
 export default function Period() {
@@ -127,7 +128,7 @@ export default function Period() {
 
       <div className="flex-1">
         {isLoading ? (
-          <div className="text-center p-6 text-gray-400">Cargando periodos...</div>
+          <SectionLoader />
         ) : periods.length === 0 ? (
           <NoActivePeriodMessage />
         ) : (

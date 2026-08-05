@@ -44,11 +44,24 @@ html, body {
   background-color: var(--bg);
 }
 
-/*Acá empiezan los estilos del main-loader*/
+/* Loader principal - Azul */
 .main-loader {
   width: 60px;
   aspect-ratio: 1.154;
   --_g: no-repeat radial-gradient(farthest-side, #4A82F9 90%, #0000);
+  background: 
+    var(--_g) 50%  0,
+    var(--_g) 0    100%,
+    var(--_g) 100% 100%;
+  background-size: 35% calc(35%*1.154);
+  animation: l16 1s infinite;
+}
+
+/* Loader de sección - Gris (para el outlet de la tabla) */
+.section-loader {
+  width: 40px; /* Un poco más pequeño para secciones */
+  aspect-ratio: 1.154;
+  --_g: no-repeat radial-gradient(farthest-side, #6B7280 90%, #0000);
   background: 
     var(--_g) 50%  0,
     var(--_g) 0    100%,
@@ -62,6 +75,7 @@ html, body {
     background-position: 100% 100%, 50% 0, 0 100%;
   }
 }
+
 /*.main-loader {
     position: relative;
     display: flex;
