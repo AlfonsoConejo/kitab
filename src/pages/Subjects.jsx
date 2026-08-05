@@ -5,23 +5,22 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { notify } from "@/utils";
 import { usePeriod } from "@/context/PeriodContext";
-import { BookOpen, CalendarDays, User, Trash2 } from "lucide-react";
+import { BookOpen, CalendarDays, User, Trash2, Pencil } from "lucide-react";
 import { formatDate, getClassDays } from "@/functions";
+import { Navigate } from "react-router-dom";
 import ConfirmModal from "@/components/ConfirmModal";
+import SectionLoader from "@/components/SectionLoader";
 
 export default function Subjects() {
   const { selectedPeriod } = usePeriod();
   const [subjectToDelete, setSubjectToDelete] = useState(null);
+  const [subjectToEdit, setSubjectToEdit] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  console.log("Materias: ", subjects);
-  console.log("Clases: ", classes);
-
   // Fetch all subjects and classes of the period
   useEffect(() => {
-    // Show nothing if there is no selected period
     if (!selectedPeriod) {
       setSubjects([]);
       setClasses([]);
@@ -29,7 +28,6 @@ export default function Subjects() {
       return;
     }
 
-    // Fetch subjects information
     async function fetchData() {
       try {
         setIsLoading(true);
@@ -75,14 +73,13 @@ export default function Subjects() {
     fetchData();
   }, [selectedPeriod?.id]);
 
+  // Combine subjects with their classes
   const subjectsWithClasses = useMemo(() => {
     const classesBySubject = classes.reduce((acc, cls) => {
       if (!acc[cls.subjectId]) {
         acc[cls.subjectId] = [];
       }
-
       acc[cls.subjectId].push(cls);
-
       return acc;
     }, {});
 
@@ -91,8 +88,6 @@ export default function Subjects() {
       classes: classesBySubject[subject.id] ?? [],
     }));
   }, [subjects, classes]);
-
-  let content;
 
   async function handleDeletedSubject(subject) {
     try {
@@ -105,20 +100,18 @@ export default function Subjects() {
         return;
       }
 
-      setSubjects((prev) =>
-        prev.filter((s) => s.id !== subject.id)
-      );
-
-      setClasses((prev) =>
-        prev.filter((c) => c.subjectId !== subject.id)
-      );
+      setSubjects((prev) => prev.filter((s) => s.id !== subject.id));
+      setClasses((prev) => prev.filter((c) => c.subjectId !== subject.id));
+      notify("success", `"${subject.name}" eliminada correctamente`);
     } catch {
       notify("error", "Error de conexión");
     }
   }
 
+  // Render content based on state
+  let content;
   if (isLoading) {
-    content = <div className="text-center p-6">Cargando materias...</div>;
+    content = <SectionLoader />;
   } else if (!selectedPeriod) {
     content = <NoActivePeriodMessage />;
   } else if (subjects.length === 0) {
@@ -132,26 +125,32 @@ export default function Subjects() {
       />
     );
   } else {
-    content = <SubjectsList subjects={subjectsWithClasses} setSubjectToDelete={setSubjectToDelete}/>;
+    content = (
+      <SubjectsGrid 
+        subjects={subjectsWithClasses} 
+        onDelete={setSubjectToDelete}
+        onEdit={setSubjectToEdit}
+      />
+    );
   }
-  return(
+
+  return (
     <div className="flex flex-col flex-1 gap-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-semibold">
-          Materias
-        </h1>
-        {
-          selectedPeriod && 
-          <Link to="/app/subjects/new" className="bg-sky-600 hover:bg-sky-500 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors">
+        <h1 className="text-3xl font-semibold text-white">Materias</h1>
+        {selectedPeriod && (
+          <Link
+            to="/app/subjects/new"
+            className="bg-sky-600 hover:bg-sky-500 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors"
+          >
             Agregar materia
           </Link>
-        } 
+        )}
       </div>
 
-      <div className="flex-1">
-        {content}
-      </div>
+      <div className="flex-1">{content}</div>
 
+      {/* Delete Confirmation Modal */}
       {subjectToDelete && (
         <ConfirmModal
           title="Eliminar materia"
@@ -165,85 +164,100 @@ export default function Subjects() {
         />
       )}
 
+      {/* Edit navigation - redirect to edit page */}
+      {subjectToEdit && (
+        <Navigate to={`/app/subjects/${subjectToEdit.id}/edit`} />
+      )}
     </div>
   );
 }
 
-function SubjectsList({subjects, setSubjectToDelete}) {
-  return(
-    <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
-      {
-        subjects.map((subject) => (
-          <SubjectCard 
-            key={subject.id}
-            subject={subject}
-            onDelete={setSubjectToDelete}/>
-        ))
-      }
+/** Grid of subject cards */
+function SubjectsGrid({ subjects, onDelete, onEdit }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {subjects.map((subject) => (
+        <SubjectCard
+          key={subject.id}
+          subject={subject}
+          onDelete={onDelete}
+          onEdit={onEdit}
+        />
+      ))}
     </div>
-  )
+  );
 }
 
-function SubjectCard({ subject, onDelete }) {
+/* Class card */
+function SubjectCard({ subject, onDelete, onEdit }) {
+  const classDays = getClassDays(subject.classes);
+  
   return (
-    <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
-      {/* Header */}
-      <div className="flex gap-3 justify-between">
-        <div className="flex items-center gap-3">
+    <div className="group rounded-xl border border-gray-700 bg-gray-800/50 hover:bg-gray-800 transition-all duration-200 p-6">
+      {/* Header with name and color */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div
-            className="h-5 w-5 rounded-full"
+            className="h-5 w-5 rounded-full shrink-0"
             style={{ backgroundColor: subject.color }}
           />
-
-          <h3 className="text-xl font-semibold text-white">
+          <h3 className="text-lg font-semibold text-white truncate">
             {subject.name}
           </h3>
         </div>
 
-        <button
-          onClick={() => onDelete?.(subject)}
-          className="
-            p-2
-            rounded-lg
-          text-red-400
-          hover:bg-red-500/10
-            transition-colors
-            cursor-pointer
-          "
-        >
-          <Trash2 size={16} />
-        </button>
-        
+        {/* Actions*/}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => onEdit?.(subject)}
+            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
+            title="Editar materia"
+          >
+            <Pencil size={16} />
+          </button>
+          <button
+            onClick={() => onDelete?.(subject)}
+            className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+            title="Eliminar materia"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
 
-      {/* Body */}
-      <div className="mt-3 inline-flex items-center justify-center text-xs bg-gray-700 px-3 py-1 rounded-lg text-gray-300">
-        <span>
-          {getClassDays(subject.classes)}
-        </span>    
-      </div>
+      {/* Days of class */}
+      {classDays && (
+        <div className="mt-3 inline-flex items-center bg-gray-700/50 px-3 py-1 rounded-lg text-xs text-gray-300">
+          <span>{classDays}</span>
+        </div>
+      )}
 
-      <div className="mt-3 flex items-center gap-2 text-gray-300">
-        <CalendarDays size={18} />
+      {/* Dates */}
+      <div className="mt-3 flex items-center gap-2 text-sm text-gray-300">
+        <CalendarDays size={16} className="shrink-0" />
         <span>
-          {formatDate(subject.startDate, subject.endDate)} - {formatDate(subject.endDate)}
+          {formatDate(subject.startDate)} — {formatDate(subject.endDate)}
         </span>
       </div>
 
-      <div className="mt-2 flex items-center gap-2 text-gray-300">
-        <User size={18} />
-        <span>
+      {/* Teacher */}
+      <div className="mt-2 flex items-center gap-2 text-sm text-gray-300">
+        <User size={16} className="shrink-0" />
+        <span className="truncate">
           {subject.teacher || "Sin profesor asignado"}
         </span>
       </div>
 
-      {/* Footer */}
+      {/* Footer with action button */}
       <div className="mt-6 flex items-center justify-end">
-
-        <Link to={`/app/subjects/${subject.id}`} className="rounded-lg font-semibold text-white bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm transition cursor-pointer">
+        <Link
+          to={`/app/subjects/${subject.id}`}
+          className="rounded-lg font-semibold text-white bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm transition-colors cursor-pointer"
+        >
           Ver materia
         </Link>
       </div>
     </div>
   );
 }
+

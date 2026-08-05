@@ -208,7 +208,7 @@ function PeriodSection({
         </span>
       </div>
 
-      {/* Tabla con estilo de tarjeta */}
+      {/* Table with card-style */}
       <div className="overflow-hidden rounded-xl border border-gray-700 bg-gray-800/50">
         <table className="w-full">
           <thead>
