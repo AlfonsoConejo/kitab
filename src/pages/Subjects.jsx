@@ -19,6 +19,11 @@ export default function Subjects() {
   const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Set the document title
+  useEffect(() => {
+    document.title =  "Materias";
+  }, []);
+
   // Fetch all subjects and classes of the period
   useEffect(() => {
     if (!selectedPeriod) {

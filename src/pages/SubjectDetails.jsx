@@ -4,6 +4,7 @@ import { apiFetch } from "../services/apiFetch.js";
 import { notify } from "@/utils.jsx";
 import { User, CalendarDays, Clock3, MapPin, Laptop, Building2, FlaskConical, Wrench, Notebook, Paintbrush} from "lucide-react"
 import { DAY_NAMES, formatDate, formatTime } from "@/functions.js";
+import SectionLoader from "@/components/SectionLoader.jsx";
 
 const typeMap = {
   theory: {
@@ -71,11 +72,14 @@ export default function SubjectDetails() {
 
   }, [id, navigate]);
 
+  // Set the document title
+  useEffect(() => {
+    document.title =  subject ? `${subject.name}` : "Materia";
+  }, [subject]);
+
   if (isLoadingSubject) {
     return (
-      <div className="flex justify-center p-8">
-        Cargando materia...
-      </div>
+      <SectionLoader />
     );
   }
 
@@ -143,7 +147,9 @@ export default function SubjectDetails() {
         Clases
       </h2>
       {subject.classes.length === 0 ? (
-        <p className="text-gray-400">Sin clases. Edita la materia para agregar clases.</p>
+        <div className="flex items-center justify-center gap-4 rounded-lg bg-gray-800 border border-gray-700 p-4 text-center">
+          <p className="text-gray-400">Sin clases. Edita la materia para agregar clases.</p>
+        </div>
       ) : (
         subject.classes.map((classItem) => (
           <ClassCard key={classItem.id} classData={{...classItem}} />

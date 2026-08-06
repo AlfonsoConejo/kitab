@@ -24,6 +24,11 @@ export default function PeriodForm() {
 
   const [isLoadingPeriod, setIsLoadingPeriod] = useState(isEditMode);
 
+  // Set the document title
+  useEffect(() => {
+    document.title = isEditMode ? "Editar periodo" : "Nuevo periodo";
+  }, [isEditMode]); 
+
   // Get the information of the period if user is editing one
   useEffect(() => {
     if (!isEditMode) return;

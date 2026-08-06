@@ -51,6 +51,11 @@ export default function Period() {
       return end < today;
     });
   }, [periods]);
+  
+  // Set the document title
+  useEffect(() => {
+    document.title =  "Periodos";
+  }, []); 
 
   useEffect(() => {
     async function fetchPeriods() {
