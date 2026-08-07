@@ -1,5 +1,5 @@
 import { useParams, Navigate, useNavigate  } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BookOpen, NotebookPen } from "lucide-react";
 import { useClickOutside } from "@/customHooks/useClickOutside.jsx";
 import ClassForm from "@/components/ClassForm.jsx";
@@ -8,6 +8,8 @@ import { usePeriod } from "@/context/PeriodContext";
 import { notify } from "@/utils";
 import { apiFetch } from "@/services/apiFetch";
 import ColorPicker from "@/components/ColorPicker";
+import SectionLoader from "@/components/SectionLoader";
+import { areSameDay } from "@/utils/date.utils.js";
 
 export default function SubjectsForm() {
   
@@ -15,7 +17,7 @@ export default function SubjectsForm() {
 
   //Get period from context
   const { selectedPeriod } = usePeriod();
-  console.log("Periodo seleccioando: ", selectedPeriod)
+  console.log("Este es el periodo sobre el que se está trabajando: ", selectedPeriod)
 
   if (!selectedPeriod) {
     return <Navigate to="/app/periods" replace />;
@@ -38,24 +40,68 @@ export default function SubjectsForm() {
 
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isLoadingSubject, setIsLoadingSubject] = useState(isEditMode);
+  const [isManualDate, setIsManualDate] = useState(false);
   const [serverError, setServerError] = useState("");
 
-  function addClass() {
-    setSubject((prev) => ({
-      ...prev,
-      classes: [
-        ...prev.classes,
-        {
-          tempId: crypto.randomUUID(),
-          days: [],
-          type: "theory",
-          mode: "onsite",
-          classroom: "",
-          startTime: "",
-          endTime: ""
-        },
-      ],
-    }));
+  const [deletedClassIds, setDeletedClassIds] = useState([]);
+
+  // Set the document title
+  useEffect(() => {
+    document.title = isEditMode ? "Editar materia" : "Nueva materia";
+  }, [isEditMode]); 
+
+  // Get the information of the subject if user is editing
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const getSubject = async () => {
+      try {
+        const res = await apiFetch(`/api/subjects/${id}/with-classes`, {
+          method: "GET",
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          notify("error", "No se pudo obtener la materia");
+          navigate("/app/subjects");
+          return;
+        }
+
+        setSubject({
+          id: data.data.id,
+          periodId: data.data.periodId,
+          name: data.data.name,
+          teacher: data.data.teacher,
+          color: data.data.color,
+          startDate: data.data.startDate,
+          endDate: data.data.endDate,
+          classes: data.data.classes.map((cls) => ({
+            id: cls.id, // ID from Database
+            tempId: crypto.randomUUID(), // temporal UUID
+            days: cls.days,
+            type: cls.type,
+            mode: cls.mode,
+            classroom: cls.classroom,
+            startTime: cls.startTime,
+            endTime: cls.endTime,
+          }))
+        });
+
+      } catch (error) {
+        console.error("Error fetching subject:", error);
+        notify("error", "Error de conexión");
+        navigate("/app/subjects");
+      } finally {
+        setIsLoadingSubject(false);
+      }
+    }
+    getSubject();
+  }, [isEditMode, id, navigate]);
+
+  if (isEditMode) {
+    console.log("esta es la materia que estamos recibiendo:", subject);
   }
 
   //Validate if all clases have complete information
@@ -79,20 +125,74 @@ export default function SubjectsForm() {
     isSending ||
     !areClassesValid;
 
+  
+  // Add a new class to the subject
+  function addClass() {
+    setSubject((prev) => ({
+      ...prev,
+      classes: [
+        ...prev.classes,
+        {
+          tempId: crypto.randomUUID(),
+          days: [],
+          type: "theory",
+          mode: "onsite",
+          classroom: "",
+          startTime: "",
+          endTime: ""
+        },
+      ],
+    }));
+  }
+
   const colorPickerRef = useRef(null);
   useClickOutside(colorPickerRef, () => setIsColorPickerOpen(false));
 
-  const [isManualDate, setIsManualDate] = useState(false);
+  // If user is creating a subject set dates no manual
+  useEffect(() => {
+    if (!isEditMode && selectedPeriod) {
+      setSubject((prev) => ({
+        ...prev,
+        startDate: selectedPeriod.startDate,
+        endDate: selectedPeriod.endDate,
+      }));
+      setIsManualDate(false);
+    }
+  }, [isEditMode, selectedPeriod])
 
-  function usePeriodDates() {
+  // If user is editing a subject check if period dates and subject dates are the same
+  useEffect(() => {
+    if (isEditMode && subject && selectedPeriod) {
+      const usePeriodDates = 
+        areSameDay(selectedPeriod.startDate, subject.startDate) &&
+        areSameDay(selectedPeriod.endDate, subject.endDate);
+      
+      setIsManualDate(!usePeriodDates);
+    }
+  }, [isEditMode, subject, selectedPeriod])
+
+
+  const handleUsePeriodDates = () => {
+    if (!selectedPeriod) {
+      notify("error", "No hay un periodo seleccionado");
+      return;
+    }
+
     setIsManualDate(false);
-
     setSubject((prev) => ({
       ...prev,
       startDate: selectedPeriod.startDate,
       endDate: selectedPeriod.endDate,
     }));
-  }
+  };
+
+  const handleManualDate = () => {
+    if (!selectedPeriod) {
+      notify("error", "Primero selecciona un periodo");
+      return;
+    }
+    setIsManualDate(true);
+  };
 
   function handleClassChange(tempId, field, value) {
     setSubject((prev) => ({
@@ -119,11 +219,56 @@ export default function SubjectsForm() {
   }
 
   function handleDeleteClass(tempId) {
+     // Buscar la clase a eliminar
+    const classToDelete = subject.classes.find(c => c.tempId === tempId);
+    
+    if (!classToDelete) return;
+
+    // Si la clase tiene ID (está en la BD), marcarla para eliminar
+    if (classToDelete.id) {
+      setDeletedClassIds(prev => [...prev, classToDelete.id]);
+      console.log(`Clase #${classToDelete.id} marcada para eliminar`);
+    }
+    // Eliminar la clase del estado local (tanto nuevas como existentes)
     setSubject((prev) => ({
       ...prev,
       classes: prev.classes.filter((classItem) => classItem.tempId !== tempId),
     }));
   }
+
+   // Función para obtener las clases que serán enviadas al backend
+  const getClassesForSubmit = () => {
+    return subject.classes.map(({
+      id,
+      days,
+      type,
+      mode,
+      classroom,
+      startTime,
+      endTime,
+    }) => ({
+      ...(id && { id }),
+      days,
+      type: type?.trim(),
+      mode: mode?.trim(),
+      classroom: classroom?.trim() || null,
+      startTime: startTime?.trim(),
+      endTime: endTime?.trim(),
+    }));
+  };
+
+  // Función mejorada para limpiar datos antes de enviar
+  const prepareSubmitData = () => {
+    return {
+      name: subject.name.trim(),
+      teacher: subject.teacher.trim(),
+      color: subject.color,
+      startDate: subject.startDate,
+      endDate: subject.endDate,
+      classes: getClassesForSubmit(),
+      deletedClassIds: deletedClassIds, // ✅ Enviar IDs de clases eliminadas
+    };
+  };
 
   const handleSubjectChange = (e) => {
     setServerError("");
@@ -149,398 +294,401 @@ export default function SubjectsForm() {
     }));
   };
 
+  // handleSubmit actualizado
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    //Cleanead subject data
-    const cleanSubjectData = {
-      name: subject.name.trim(),
-      teacher: subject.teacher.trim(),
-      color: subject.color,
-      startDate: subject.startDate,
-      endDate: subject.endDate,
-      classes: subject.classes.map(({
-        days,
-        type,
-        mode,
-        classroom,
-        startTime,
-        endTime,
-      }) => ({
-        days,
-        type: type?.trim(),
-        mode: mode?.trim(),
-        classroom: classroom?.trim() || null,
-        startTime: startTime?.trim(),
-        endTime: endTime?.trim(),
-      })),
-    };
+    if (!selectedPeriod) {
+      notify("error", "No hay un periodo seleccionado");
+      return;
+    }
+
+    // Preparar datos con eliminación
+    const cleanSubjectData = prepareSubmitData();
 
     setIsSending(true);
-
-    //Clean setServerError message
     setServerError("");
 
     try {
+      let url, method;
 
-      // Send subject to database
-      const resSubjects = await apiFetch(`/api/periods/${selectedPeriod.id}/subjects`, {
-        method: "POST",
+      if (isEditMode) {
+        url = `/api/subjects/${subject.id}`;
+        method = "PUT";
+      } else {
+        url = `/api/periods/${selectedPeriod.id}/subjects`;
+        method = "POST";
+      }
+
+      const res = await apiFetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(cleanSubjectData),
       });
 
-      const subjectData = await resSubjects.json();
+      const data = await res.json();
 
-      if (!resSubjects.ok) {
-        setServerError(subjectData.message);
+      if (!res.ok) {
+        setServerError(data.message);
         return;
       }
 
-      notify("success", "Materia guardada correctamente.");
+      notify("success", isEditMode 
+        ? "Materia actualizada correctamente" 
+        : "Materia creada correctamente"
+      );
+      
       navigate("/app/subjects");
 
     } catch (err) {
+      console.error("Error al guardar:", err);
       notify("error", "No fue posible conectar con el servidor.");
-      console.error(err);
     } finally {
       setIsSending(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col flex-1 gap-6">
         <div>
           <h1 className="text-3xl font-semibold text-white">
             {isEditMode ? "Editar Materia" : "Nueva materia"}
           </h1>
         </div>
 
-        <div className="flex flex-col rounded-lg border border-gray-800 bg-gray-800 p-8 gap-8">
-
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-6"
-            autoComplete="off"
-          >
-            {/** Subject Information */}
-            <div>
-              {/* Subject header*/}
-              <div className="flex items-center gap-3 mb-8">
-                <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-cyan-900/40">
-                  <BookOpen size={24} />
-                </div>
-
+        <div className="flex-1">
+          {isLoadingSubject ? (
+            <SectionLoader />
+          ) : (
+            <div className="flex flex-col rounded-lg border border-gray-800 bg-gray-800 p-8 gap-8">
+              {/* Form */}
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col gap-6"
+                autoComplete="off"
+              >
+                {/** Subject Information */}
                 <div>
-                  <h2 className="text-xl font-semibold text-white">
-                    Información de la materia
-                  </h2>
+                  {/* Subject header*/}
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-cyan-900/40">
+                      <BookOpen size={24} />
+                    </div>
 
-                  <p className="text-sm text-gray-400">
-                    Completa los datos de la materia.
-                  </p>
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">
+                        Información de la materia
+                      </h2>
+
+                      <p className="text-sm text-gray-400">
+                        Completa los datos de la materia.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {/* Subject Name */}
+                    <div className="flex flex-col gap-2">
+                      <label
+                        htmlFor="name"
+                        className="text-sm font-medium text-gray-300"
+                      >
+                        Nombre de la materia
+                      </label>
+
+                      <input
+                        onChange={handleSubjectChange}
+                        id="name"
+                        name="name"
+                        type="text"
+                        placeholder="Geomática"
+                        maxLength={40}
+                        value={subject.name}
+                        className="
+                          rounded-lg
+                          border
+                          border-gray-700
+                          bg-gray-900
+                          px-4
+                          py-3
+                          text-white
+                          placeholder:text-gray-500
+                          outline-none
+                          focus:border-cyan-600
+                        "
+                      />
+                    </div>
+
+                    {/* Teacher Name */}
+                    <div className="flex flex-col gap-2">
+                      <label
+                        htmlFor="teacher"
+                        className="text-sm font-medium text-gray-300"
+                      >
+                        Nombre del profesor{" "}
+                        <span className="font-normal text-gray-500">
+                          (opcional)
+                        </span>
+                      </label>
+
+                      <input
+                        onChange={handleSubjectChange}
+                        id="teacher"
+                        name="teacher"
+                        type="text"
+                        placeholder="José Hernández"
+                        maxLength={50}
+                        value={subject.teacher}
+                        className="
+                          rounded-lg
+                          border
+                          border-gray-700
+                          bg-gray-900
+                          px-4
+                          py-3
+                          text-white
+                          placeholder:text-gray-500
+                          outline-none
+                          focus:border-cyan-600
+                        "
+                      />
+                    </div>
+
+                    {/* Color */}
+                    <div className="flex flex-col gap-2" >
+                      <ColorPicker
+                        value={subject.color}
+                        onChange={handleColorChange}
+                      />
+                    </div>
+
+                    {/* Switch for date selection */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-300">
+                        Fechas de inicio y término
+                      </label>
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={handleUsePeriodDates}
+                          className={`
+                            px-3 py-2
+                            rounded-lg
+                            text-sm font-semibold
+                            transition-colors
+                            cursor-pointer
+
+                            ${
+                              !isManualDate
+                                ? "bg-cyan-600 text-white"
+                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            }
+                          `}
+                        >
+                          {"Periodo académico"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleManualDate}
+                          className={`
+                            px-3 py-2
+                            rounded-lg
+                            text-sm font-semibold
+                            transition-colors
+                            cursor-pointer
+
+                            ${
+                              isManualDate
+                                ? "bg-cyan-600 text-white"
+                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            }
+                          `}
+                        >
+                          {"Manual"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Subject Name */}
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="name"
-                    className="text-sm font-medium text-gray-300"
-                  >
-                    Nombre de la materia
-                  </label>
+                <div className="grid gap-6 md:grid-cols-2">
 
-                  <input
-                    onChange={handleSubjectChange}
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="Geomática"
-                    maxLength={40}
-                    value={subject.name}
-                    className="
-                      rounded-lg
-                      border
-                      border-gray-700
-                      bg-gray-900
-                      px-4
-                      py-3
-                      text-white
-                      placeholder:text-gray-500
-                      outline-none
-                      focus:border-cyan-600
-                    "
-                  />
+                  {/* Start Date */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-300">
+                      Fecha de inicio
+                    </label>
+
+                    <input
+                      name="startDate"
+                      type="date"
+                      disabled={!isManualDate} 
+                      value={subject.startDate}
+                      min={selectedPeriod.startDate}
+                      max={isManualDate ? subject.endDate : selectedPeriod.endDate}
+                      onChange={handleSubjectChange}
+                      className="
+                        rounded-lg
+                        border
+                        border-gray-700
+                        bg-gray-900
+                        px-4
+                        py-3
+                        text-white
+                        outline-none
+                        focus:border-cyan-600
+
+                        disabled: disabled:cursor-not-allowed disabled:opacity-50
+                      "
+                    />
+                  </div>
+
+                  {/* End Date */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-300">
+                      Fecha de término
+                    </label>
+
+                    <input
+                      type="date"
+                      name="endDate"
+                      disabled={!isManualDate} 
+                      value={subject.endDate}
+                      min={isManualDate ? subject.startDate : selectedPeriod.startDate}
+                      max={selectedPeriod.endDate}
+                      onChange={handleSubjectChange}
+                      className={`
+                        rounded-lg
+                        border
+                        border-gray-700
+                        bg-gray-900
+                        px-4
+                        py-3
+                        text-white
+                        outline-none
+                        focus:border-cyan-600
+
+                        disabled: disabled:cursor-not-allowed disabled:opacity-50
+                      `}
+                    />
+                  </div>
                 </div>
 
-                {/* Teacher Name */}
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="teacher"
-                    className="text-sm font-medium text-gray-300"
-                  >
-                    Nombre del profesor{" "}
-                    <span className="font-normal text-gray-500">
-                      (opcional)
-                    </span>
-                  </label>
+                {/* Classes information */}
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-cyan-900/40">
+                      <NotebookPen size={24} />
+                    </div>
 
-                  <input
-                    onChange={handleSubjectChange}
-                    id="teacher"
-                    name="teacher"
-                    type="text"
-                    placeholder="José Hernández"
-                    maxLength={50}
-                    value={subject.teacher}
-                    className="
-                      rounded-lg
-                      border
-                      border-gray-700
-                      bg-gray-900
-                      px-4
-                      py-3
-                      text-white
-                      placeholder:text-gray-500
-                      outline-none
-                      focus:border-cyan-600
-                    "
-                  />
-                </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">
+                        Información de las clases
+                      </h2>
 
-                {/* Color */}
-                <div className="flex flex-col gap-2" >
-                  <ColorPicker
-                    value={subject.color}
-                    onChange={handleColorChange}
-                  />
-                </div>
+                      <p className="text-sm text-gray-400">
+                        Completa los datos de las clases.
+                      </p>
+                    </div>
+                  </div>
 
-                {/* Switch for date selection */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-gray-300">
-                    Fechas de inicio y término
-                  </label>
+                  <div className="flex flex-col gap-4">
+                    {subject.classes.map((classItem, index) => (
+                      <ClassForm
+                        key={classItem.tempId}
+                        classData={classItem}
+                        isEditMode={isEditMode}
+                        isNew={!classItem.id}
+                        onChange={(field, value) =>
+                          handleClassChange(classItem.tempId, field, value)
+                        }
+                        onDelete={() => handleDeleteClass(classItem.tempId)}
+                      />
+                    ))}
+                  </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  {/* "Add class" button */}
+                  <div className="flex ">
                     <button
                       type="button"
-                      onClick={usePeriodDates}
+                      onClick={addClass}
                       className={`
-                        px-3 py-2
                         rounded-lg
-                        text-sm font-semibold
-                        transition-colors
+                        bg-orange-600 hover:bg-orange-500
+                        px-4
+                        py-2
+                        font-semibold
+                        text-sm
+                        text-white
                         cursor-pointer
-
-                        ${
-                          !isManualDate
-                            ? "bg-cyan-600 text-white"
-                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                        }
+                        transition-colors
+                        ${subject.classes.length > 0 ? "mt-6" : ""}
                       `}
                     >
-                      {"Periodo académico"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setIsManualDate(true)}
-                      className={`
-                        px-3 py-2
-                        rounded-lg
-                        text-sm font-semibold
-                        transition-colors
-                        cursor-pointer
-
-                        ${
-                          isManualDate
-                            ? "bg-cyan-600 text-white"
-                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                        }
-                      `}
-                    >
-                      {"Manual"}
+                      Añadir clase
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+                {serverError && (
+                  <div className="bg-red-500/10 border border-red-500 text-red-400 p-2 rounded text-sm">
+                    {serverError}
+                  </div>
+                )}
 
-              {/* Start Date */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300">
-                  Fecha de inicio
-                </label>
+                {/* Buttons */}
+                <div className="flex justify-end gap-3 pt-2">
+                  <Link to="/app/subjects"
+                    className="
+                      rounded-lg
+                      border
+                      border-gray-700
+                      px-4
+                      py-2
+                      text-gray-300
+                      hover:bg-gray-800
+                      cursor-pointer
+                      text-sm
+                      transition-colors
+                    "
+                  >
+                    Cancelar
+                  </Link>
 
-                <input
-                  name="startDate"
-                  type="date"
-                  disabled={!isManualDate} 
-                  value={subject.startDate}
-                  min={selectedPeriod.startDate}
-                  max={isManualDate ? subject.endDate : selectedPeriod.endDate}
-                  onChange={handleSubjectChange}
-                  className="
-                    rounded-lg
-                    border
-                    border-gray-700
-                    bg-gray-900
-                    px-4
-                    py-3
-                    text-white
-                    outline-none
-                    focus:border-cyan-600
+                  <button
+                    disabled={isSubmitDisabled}
+                    type="submit"
+                    className="
+                      rounded-lg
+                      bg-sky-600
+                      px-4
+                      py-2
+                      font-semibold
+                      text-sm
+                      text-white
+                      hover:bg-sky-500
+                      cursor-pointer
+                      transition-colors
 
-                    disabled: disabled:cursor-not-allowed disabled:opacity-50
-                  "
-                />
-              </div>
-
-              {/* End Date */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300">
-                  Fecha de término
-                </label>
-
-                <input
-                  type="date"
-                  name="endDate"
-                  disabled={!isManualDate} 
-                  value={subject.endDate}
-                  min={isManualDate ? subject.startDate : selectedPeriod.startDate}
-                  max={selectedPeriod.endDate}
-                  onChange={handleSubjectChange}
-                  className={`
-                    rounded-lg
-                    border
-                    border-gray-700
-                    bg-gray-900
-                    px-4
-                    py-3
-                    text-white
-                    outline-none
-                    focus:border-cyan-600
-
-                    disabled: disabled:cursor-not-allowed disabled:opacity-50
-                  `}
-                />
-              </div>
-          </div>
-
-            {/* Classes information */}
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-cyan-900/40">
-                  <NotebookPen size={24} />
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-semibold text-white">
-                    Información de las clases
-                  </h2>
-
-                  <p className="text-sm text-gray-400">
-                    Completa los datos de las clases.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {subject.classes.map((classItem, index) => (
-                  <ClassForm
-                    key={classItem.tempId}
-                    classData={classItem}
-                    onChange={(field, value) =>
-                      handleClassChange(classItem.tempId, field, value)
+                      disabled:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50
+                    "
+                  >
+                    {isSending
+                      ? <div className="loader"></div>
+                      : isEditMode
+                        ? "Guardar cambios"
+                        : "Crear materia"
                     }
-                    onDelete={() => handleDeleteClass(classItem.tempId)}
-                  />
-                ))}
-              </div>
-
-              {/* "Add class" button */}
-              <div className="flex ">
-                <button
-                  type="button"
-                  onClick={addClass}
-                  className={`
-                    rounded-lg
-                    bg-orange-600 hover:bg-orange-500
-                    px-4
-                    py-2
-                    font-semibold
-                    text-sm
-                    text-white
-                    cursor-pointer
-                    transition-colors
-                    ${subject.classes.length > 0 ? "mt-6" : ""}
-                  `}
-                >
-                  Añadir clase
-                </button>
-              </div>
+                  </button>
+                </div>
+              </form>
             </div>
-
-            {serverError && (
-              <div className="bg-red-500/10 border border-red-500 text-red-400 p-2 rounded text-sm">
-                {serverError}
-              </div>
-            )}
-
-            {/* Buttons */}
-            <div className="flex justify-end gap-3 pt-2">
-              <Link to="/app/subjects"
-                className="
-                  rounded-lg
-                  border
-                  border-gray-700
-                  px-4
-                  py-2
-                  text-gray-300
-                  hover:bg-gray-800
-                  cursor-pointer
-                  text-sm
-                  transition-colors
-                "
-              >
-                Cancelar
-              </Link>
-
-              <button
-                disabled={isSubmitDisabled}
-                type="submit"
-                className="
-                  rounded-lg
-                  bg-sky-600
-                  px-4
-                  py-2
-                  font-semibold
-                  text-sm
-                  text-white
-                  hover:bg-sky-500
-                  cursor-pointer
-                  transition-colors
-
-                  disabled:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50
-                "
-              >
-                {isSending
-                  ? <div className="loader"></div>
-                  : isEditMode
-                    ? "Guardar cambios"
-                    : "Crear periodo"
-                }
-              </button>
-            </div>
-          </form>
+          )}
+          
         </div>
       
     </div>  

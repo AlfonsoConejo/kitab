@@ -7,14 +7,15 @@ import { notify } from "@/utils";
 import { usePeriod } from "@/context/PeriodContext";
 import { BookOpen, CalendarDays, User, Trash2, Pencil } from "lucide-react";
 import { formatDate, getClassDays } from "@/functions";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ConfirmModal from "@/components/ConfirmModal";
 import SectionLoader from "@/components/SectionLoader";
 
 export default function Subjects() {
+  const navigate = useNavigate();
+
   const { selectedPeriod } = usePeriod();
   const [subjectToDelete, setSubjectToDelete] = useState(null);
-  const [subjectToEdit, setSubjectToEdit] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,6 +95,10 @@ export default function Subjects() {
     }));
   }, [subjects, classes]);
 
+  const handleEdit = (subject) => {
+    navigate(`/app/subjects/${subject.id}/edit`);
+  };
+
   async function handleDeletedSubject(subject) {
     try {
       const res = await apiFetch(`/api/subjects/${subject.id}`, {
@@ -134,7 +139,7 @@ export default function Subjects() {
       <SubjectsGrid 
         subjects={subjectsWithClasses} 
         onDelete={setSubjectToDelete}
-        onEdit={setSubjectToEdit}
+        onEdit={handleEdit}
       />
     );
   }
@@ -167,11 +172,6 @@ export default function Subjects() {
             setSubjectToDelete(null);
           }}
         />
-      )}
-
-      {/* Edit navigation - redirect to edit page */}
-      {subjectToEdit && (
-        <Navigate to={`/app/subjects/${subjectToEdit.id}/edit`} />
       )}
     </div>
   );

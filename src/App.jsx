@@ -81,6 +81,7 @@ export default function App() {
             <Route path="subjects" element={<Subjects />} />
             <Route path="subjects/new" element={<SubjectsForm />} />
             <Route path="subjects/:id" element={<SubjectDetails />} />
+            <Route path="subjects/:id/edit" element={<SubjectsForm />} />
 
             <Route path="calendar" element={<Calendar />} />
             <Route path="tasks" element={<Tasks />} />
