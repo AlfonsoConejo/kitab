@@ -45,6 +45,9 @@ export default function SubjectsForm() {
 
   const [deletedClassIds, setDeletedClassIds] = useState([]); // Mark to delete
   const [deletingClassIds, setDeletingClassIds] = useState([]); // // Mark to animate deletion
+  const [addingClassIds, setAddingClassIds] = useState([]); // Set class to animate entrance
+
+  const classesEndRef = useRef(null);
 
   // Set the document title
   useEffect(() => {
@@ -121,15 +124,17 @@ export default function SubjectsForm() {
     isSending ||
     !areClassesValid;
 
-  
-  // Add a new class to the subject
   function addClass() {
+    const tempId = crypto.randomUUID();
+
+    setAddingClassIds((prev) => [...prev, tempId]);
+
     setSubject((prev) => ({
       ...prev,
       classes: [
         ...prev.classes,
         {
-          tempId: crypto.randomUUID(),
+          tempId,
           days: [],
           type: "theory",
           mode: "onsite",
@@ -139,6 +144,21 @@ export default function SubjectsForm() {
         },
       ],
     }));
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setAddingClassIds((prev) =>
+          prev.filter((id) => id !== tempId)
+        );
+      });
+    });
+
+    setTimeout(() => {
+      classesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 101);
   }
 
   const colorPickerRef = useRef(null);
@@ -613,18 +633,22 @@ export default function SubjectsForm() {
                   <div className="flex flex-col">
                     {subject.classes.map((classItem) => {
                       const isDeleting = deletingClassIds.includes(classItem.tempId);
+                      const isAdding = addingClassIds.includes(classItem.tempId);
 
                       return (
                         <div
                           key={classItem.tempId}
-                        className={`
+                          className={`
                             grid
                             transition-all
-                            duration-300
                             ease-in-out
-                            ${isDeleting 
-                              ? "grid-rows-[0fr] opacity-0 mb-0"
-                              : "grid-rows-[1fr] opacity-100 mb-4"}
+                            ${
+                              isDeleting
+                                ? "grid-rows-[0fr] opacity-0 mb-0 duration-300"
+                                : isAdding
+                                  ? "grid-rows-[0fr] opacity-0 mb-0 duration-100"
+                                  : "grid-rows-[1fr] opacity-100 mb-4 duration-100"
+                            }
                           `}
                         >
                           <div className="min-h-0 overflow-hidden">
@@ -641,6 +665,8 @@ export default function SubjectsForm() {
                         </div>
                       );
                     })}
+
+                    <div ref={classesEndRef} />
                   </div>
 
                   {/* "Add class" button */}
