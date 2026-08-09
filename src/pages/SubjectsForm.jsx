@@ -17,7 +17,6 @@ export default function SubjectsForm() {
 
   //Get period from context
   const { selectedPeriod } = usePeriod();
-  console.log("Este es el periodo sobre el que se está trabajando: ", selectedPeriod)
 
   if (!selectedPeriod) {
     return <Navigate to="/app/periods" replace />;
@@ -33,15 +32,15 @@ export default function SubjectsForm() {
     name: '', 
     teacher: '', 
     color: '#EF4444',
-    startDate: selectedPeriod.startDate,
-    endDate: selectedPeriod.endDate,
+    startDate: '',
+    endDate: '',
     classes: [],
   });
 
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isLoadingSubject, setIsLoadingSubject] = useState(isEditMode);
-  const [isManualDate, setIsManualDate] = useState(false);
+  const [isManualDate, setIsManualDate] = useState(null);
   const [serverError, setServerError] = useState("");
 
   const [deletedClassIds, setDeletedClassIds] = useState([]);
@@ -100,10 +99,6 @@ export default function SubjectsForm() {
     getSubject();
   }, [isEditMode, id, navigate]);
 
-  if (isEditMode) {
-    console.log("esta es la materia que estamos recibiendo:", subject);
-  }
-
   //Validate if all clases have complete information
   const areClassesValid =
   subject.classes.length === 0 ||
@@ -148,7 +143,7 @@ export default function SubjectsForm() {
   const colorPickerRef = useRef(null);
   useClickOutside(colorPickerRef, () => setIsColorPickerOpen(false));
 
-  // If user is creating a subject set dates no manual
+  // If user is creating a subject set setIsManualDate to false
   useEffect(() => {
     if (!isEditMode && selectedPeriod) {
       setSubject((prev) => ({
@@ -162,14 +157,19 @@ export default function SubjectsForm() {
 
   // If user is editing a subject check if period dates and subject dates are the same
   useEffect(() => {
-    if (isEditMode && subject && selectedPeriod) {
-      const usePeriodDates = 
+    if (
+      isEditMode &&
+      selectedPeriod &&
+      subject.startDate &&
+      subject.endDate
+    ) {
+      const usePeriodDates =
         areSameDay(selectedPeriod.startDate, subject.startDate) &&
         areSameDay(selectedPeriod.endDate, subject.endDate);
-      
+
       setIsManualDate(!usePeriodDates);
     }
-  }, [isEditMode, subject, selectedPeriod])
+  }, [isEditMode, subject, selectedPeriod]);
 
 
   const handleUsePeriodDates = () => {
@@ -227,8 +227,8 @@ export default function SubjectsForm() {
     // Si la clase tiene ID (está en la BD), marcarla para eliminar
     if (classToDelete.id) {
       setDeletedClassIds(prev => [...prev, classToDelete.id]);
-      console.log(`Clase #${classToDelete.id} marcada para eliminar`);
     }
+
     // Eliminar la clase del estado local (tanto nuevas como existentes)
     setSubject((prev) => ({
       ...prev,
@@ -266,7 +266,7 @@ export default function SubjectsForm() {
       startDate: subject.startDate,
       endDate: subject.endDate,
       classes: getClassesForSubmit(),
-      deletedClassIds: deletedClassIds, // ✅ Enviar IDs de clases eliminadas
+      deletedClassIds: deletedClassIds, // Enviar IDs de clases eliminadas
     };
   };
 
@@ -482,7 +482,7 @@ export default function SubjectsForm() {
                             cursor-pointer
 
                             ${
-                              !isManualDate
+                              isManualDate === false
                                 ? "bg-cyan-600 text-white"
                                 : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                             }
@@ -502,7 +502,7 @@ export default function SubjectsForm() {
                             cursor-pointer
 
                             ${
-                              isManualDate
+                              isManualDate === true
                                 ? "bg-cyan-600 text-white"
                                 : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                             }
@@ -526,10 +526,10 @@ export default function SubjectsForm() {
                     <input
                       name="startDate"
                       type="date"
-                      disabled={!isManualDate} 
+                      disabled={isManualDate !== true} 
                       value={subject.startDate}
                       min={selectedPeriod.startDate}
-                      max={isManualDate ? subject.endDate : selectedPeriod.endDate}
+                      max={isManualDate === true  ? subject.endDate : selectedPeriod.endDate}
                       onChange={handleSubjectChange}
                       className="
                         rounded-lg
@@ -556,9 +556,9 @@ export default function SubjectsForm() {
                     <input
                       type="date"
                       name="endDate"
-                      disabled={!isManualDate} 
+                      disabled={isManualDate !== true} 
                       value={subject.endDate}
-                      min={isManualDate ? subject.startDate : selectedPeriod.startDate}
+                      min={isManualDate === true ? subject.startDate : selectedPeriod.startDate}
                       max={selectedPeriod.endDate}
                       onChange={handleSubjectChange}
                       className={`
