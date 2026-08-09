@@ -610,20 +610,37 @@ export default function SubjectsForm() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-4">
-                    {subject.classes.map((classItem, index) => (
-                      <ClassForm
-                        key={classItem.tempId}
-                        classData={classItem}
-                        isEditMode={isEditMode}
-                        isNew={!classItem.id}
-                        onChange={(field, value) =>
-                          handleClassChange(classItem.tempId, field, value)
-                        }
-                        onDelete={() => handleDeleteClass(classItem.tempId)}
-                        isDeleting={deletingClassIds.includes(classItem.tempId)}
-                      />
-                    ))}
+                  <div className="flex flex-col">
+                    {subject.classes.map((classItem) => {
+                      const isDeleting = deletingClassIds.includes(classItem.tempId);
+
+                      return (
+                        <div
+                          key={classItem.tempId}
+                        className={`
+                            grid
+                            transition-all
+                            duration-300
+                            ease-in-out
+                            ${isDeleting 
+                              ? "grid-rows-[0fr] opacity-0 mb-0"
+                              : "grid-rows-[1fr] opacity-100 mb-4"}
+                          `}
+                        >
+                          <div className="min-h-0 overflow-hidden">
+                            <ClassForm
+                              classData={classItem}
+                              isEditMode={isEditMode}
+                              isNew={!classItem.id}
+                              onChange={(field, value) =>
+                                handleClassChange(classItem.tempId, field, value)
+                              }
+                              onDelete={() => handleDeleteClass(classItem.tempId)}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* "Add class" button */}
@@ -641,7 +658,7 @@ export default function SubjectsForm() {
                         text-white
                         cursor-pointer
                         transition-colors
-                        ${subject.classes.length > 0 ? "mt-6" : ""}
+                        mt-6
                       `}
                     >
                       Añadir clase

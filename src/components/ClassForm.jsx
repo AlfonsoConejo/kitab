@@ -1,7 +1,6 @@
-import {useState} from "react";
 import { Minus, ChevronDown } from "lucide-react";
 
-const ClassForm = ({ classData, isEditMode, isNew, onChange, onDelete, isDeleting}) => {
+const ClassForm = ({ classData, isEditMode, isNew, onChange, onDelete }) => {
 
   const isClassOnsite = classData.mode === "onsite";
 
@@ -37,16 +36,6 @@ const ClassForm = ({ classData, isEditMode, isNew, onChange, onDelete, isDeletin
         gap-6
         bg-gray-800
         border-gray-600
-
-        transition-all
-        duration-300
-        ease-in-out
-
-        ${
-          isDeleting
-            ? "opacity-0 scale-95 max-h-0 overflow-hidden p-0 gap-0"
-            : "opacity-100 scale-100 max-h-[1000px]"
-        }
 
         ${
           isNew && isEditMode
