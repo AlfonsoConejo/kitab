@@ -43,7 +43,8 @@ export default function SubjectsForm() {
   const [isManualDate, setIsManualDate] = useState(null);
   const [serverError, setServerError] = useState("");
 
-  const [deletedClassIds, setDeletedClassIds] = useState([]);
+  const [deletedClassIds, setDeletedClassIds] = useState([]); // Mark to delete
+  const [deletingClassIds, setDeletingClassIds] = useState([]); // // Mark to animate deletion
 
   // Set the document title
   useEffect(() => {
@@ -220,7 +221,9 @@ export default function SubjectsForm() {
 
   function handleDeleteClass(tempId) {
      // Buscar la clase a eliminar
-    const classToDelete = subject.classes.find(c => c.tempId === tempId);
+    const classToDelete = subject.classes.find(
+      c => c.tempId === tempId
+    );
     
     if (!classToDelete) return;
 
@@ -229,11 +232,22 @@ export default function SubjectsForm() {
       setDeletedClassIds(prev => [...prev, classToDelete.id]);
     }
 
-    // Eliminar la clase del estado local (tanto nuevas como existentes)
-    setSubject((prev) => ({
-      ...prev,
-      classes: prev.classes.filter((classItem) => classItem.tempId !== tempId),
-    }));
+    // Iniciar animación
+    setDeletingClassIds(prev => [...prev, tempId]);
+
+    // Esperar a que termine la animación
+    setTimeout(() => {
+      setSubject(prev => ({
+        ...prev,
+        classes: prev.classes.filter(
+          classItem => classItem.tempId !== tempId
+        ),
+      }));
+
+      setDeletingClassIds(prev =>
+        prev.filter(id => id !== tempId)
+      );
+    }, 300);
   }
 
    // Función para obtener las clases que serán enviadas al backend
@@ -607,6 +621,7 @@ export default function SubjectsForm() {
                           handleClassChange(classItem.tempId, field, value)
                         }
                         onDelete={() => handleDeleteClass(classItem.tempId)}
+                        isDeleting={deletingClassIds.includes(classItem.tempId)}
                       />
                     ))}
                   </div>

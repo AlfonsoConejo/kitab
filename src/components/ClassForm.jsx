@@ -1,7 +1,7 @@
 import {useState} from "react";
 import { Minus, ChevronDown } from "lucide-react";
 
-const ClassForm = ({ classData, isEditMode, isNew, onChange, onDelete }) => {
+const ClassForm = ({ classData, isEditMode, isNew, onChange, onDelete, isDeleting}) => {
 
   const isClassOnsite = classData.mode === "onsite";
 
@@ -28,11 +28,33 @@ const ClassForm = ({ classData, isEditMode, isNew, onChange, onDelete }) => {
   }
 
   return (
-    <div className={`rounded-xl p-5 flex flex-col gap-6 bg-gray-800 border-gray-600 ${
-      isNew && isEditMode
-        ? 'border-2 border-dashed' 
-        : 'border '
-    }`}>
+    <div
+      className={`
+        rounded-xl
+        p-5
+        flex
+        flex-col
+        gap-6
+        bg-gray-800
+        border-gray-600
+
+        transition-all
+        duration-300
+        ease-in-out
+
+        ${
+          isDeleting
+            ? "opacity-0 scale-95 max-h-0 overflow-hidden p-0 gap-0"
+            : "opacity-100 scale-100 max-h-[1000px]"
+        }
+
+        ${
+          isNew && isEditMode
+            ? "border-2 border-dashed"
+            : "border"
+        }
+      `}
+    >
 
       {/* Class Header*/}
       <div className="flex items-center justify-between gap-2">
@@ -47,6 +69,7 @@ const ClassForm = ({ classData, isEditMode, isNew, onChange, onDelete }) => {
           )}
         </div>
         <button
+          type="button"
           onClick={onDelete}
           className="
             p-2
