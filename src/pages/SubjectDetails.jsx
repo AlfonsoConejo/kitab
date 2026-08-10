@@ -94,9 +94,14 @@ export default function SubjectDetails() {
           {subject.name}
         </h1>
 
-        <Link to={`/app/subjects`} className="rounded-lg font-semibold text-white bg-gray-700 hover:bg-gray-600 px-4 py-2 text-sm transition cursor-pointer">
-          Regresar
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to={`/app/subjects`} className="rounded-lg font-semibold text-white bg-gray-700 hover:bg-gray-600 px-4 py-2 text-sm transition cursor-pointer">
+            Regresar
+          </Link>
+          <Link to={`/app/subjects`} className="rounded-lg font-semibold text-white bg-yellow-700 hover:bg-yellow-600 px-4 py-2 text-sm transition cursor-pointer">
+            Editar
+          </Link>
+        </div>
       </div>
 
       {/* Subject header cards */}
