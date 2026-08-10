@@ -96,7 +96,11 @@ export default function Subjects() {
   }, [subjects, classes]);
 
   const handleEdit = (subject) => {
-    navigate(`/app/subjects/${subject.id}/edit`);
+    navigate(`/app/subjects/${subject.id}/edit`, {
+      state: {
+        from: `/app/subjects`,
+      },
+    });
   };
 
   async function handleDeletedSubject(subject) {

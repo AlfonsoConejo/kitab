@@ -1,4 +1,4 @@
-import { useParams, Navigate, useNavigate  } from "react-router-dom";
+import { useParams, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { BookOpen, NotebookPen } from "lucide-react";
 import { useClickOutside } from "@/customHooks/useClickOutside.jsx";
@@ -14,6 +14,7 @@ import { areSameDay } from "@/utils/date.utils.js";
 export default function SubjectsForm() {
   
   const navigate = useNavigate();
+  const location = useLocation();
 
   //Get period from context
   const { selectedPeriod } = usePeriod();
@@ -700,7 +701,8 @@ export default function SubjectsForm() {
 
                 {/* Buttons */}
                 <div className="flex justify-end gap-3 pt-2">
-                  <Link to="/app/subjects"
+                  <Link 
+                    to={location.state?.from || "/app/subjects"}
                     className="
                       rounded-lg
                       border
