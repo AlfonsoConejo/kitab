@@ -44,6 +44,12 @@ export default function SubjectsForm() {
   const [isManualDate, setIsManualDate] = useState(null);
   const [serverError, setServerError] = useState("");
 
+  const [externalConflicts, setExternalConflicts] = useState([]);
+  const [internalConflicts, setInternalConflicts] = useState([]);
+
+  console.log("Estos son los cruces con otra materias: ", externalConflicts);
+  console.log("Estos son los cruces con esta materia: ", internalConflicts);
+
   const [deletedClassIds, setDeletedClassIds] = useState([]); // Mark to delete
   const [deletingClassIds, setDeletingClassIds] = useState([]); // // Mark to animate deletion
   const [addingClassIds, setAddingClassIds] = useState([]); // Set class to animate entrance
@@ -61,37 +67,62 @@ export default function SubjectsForm() {
 
     const getSubject = async () => {
       try {
-        const res = await apiFetch(`/api/subjects/${id}/with-classes`, {
+        const resSubject = await apiFetch(`/api/subjects/${id}/with-classes`, {
           method: "GET",
         });
 
-        const data = await res.json();
+        const subjectData = await resSubject.json();
 
-        if (!res.ok) {
+        if (!resSubject.ok) {
           notify("error", "No se pudo obtener la materia");
           navigate("/app/subjects");
           return;
         }
 
+        const classes = subjectData.data.classes.map((cls) => ({
+          id: cls.id,
+          tempId: crypto.randomUUID(),
+          days: cls.days,
+          type: cls.type,
+          mode: cls.mode,
+          classroom: cls.classroom,
+          startTime: cls.startTime,
+          endTime: cls.endTime,
+        }));
+
         setSubject({
-          id: data.data.id,
-          periodId: data.data.periodId,
-          name: data.data.name,
-          teacher: data.data.teacher,
-          color: data.data.color,
-          startDate: data.data.startDate,
-          endDate: data.data.endDate,
-          classes: data.data.classes.map((cls) => ({
-            id: cls.id, // ID from Database
-            tempId: crypto.randomUUID(), // temporal UUID
-            days: cls.days,
-            type: cls.type,
-            mode: cls.mode,
-            classroom: cls.classroom,
-            startTime: cls.startTime,
-            endTime: cls.endTime,
-          }))
+          id: subjectData.data.id,
+          periodId: subjectData.data.periodId,
+          name: subjectData.data.name,
+          teacher: subjectData.data.teacher ?? "",
+          color: subjectData.data.color,
+          startDate: subjectData.data.startDate,
+          endDate: subjectData.data.endDate,
+          classes,
         });
+
+        const conflictsRes = await apiFetch(
+          `/api/subjects/${subjectData.data.id}/classes/check-conflicts`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              classes,
+            }),
+          }
+        );
+
+        const conflictsData = await conflictsRes.json();
+
+        if (!conflictsRes.ok) {
+          setServerError(conflictsData.message);
+          return;
+        }
+
+        setExternalConflicts(conflictsData.externalConflicts);
+        setInternalConflicts(conflictsData.internalConflicts);
 
       } catch (error) {
         console.error("Error fetching subject:", error);
@@ -292,8 +323,8 @@ export default function SubjectsForm() {
     }));
   };
 
-  // Función mejorada para limpiar datos antes de enviar
-  const prepareSubmitData = () => {
+  // Base function to clean subject's data
+  const prepareBaseSubjectData = () => {
     return {
       name: subject.name.trim(),
       teacher: subject.teacher.trim(),
@@ -301,7 +332,19 @@ export default function SubjectsForm() {
       startDate: subject.startDate,
       endDate: subject.endDate,
       classes: getClassesForSubmit(),
-      deletedClassIds: deletedClassIds, // Enviar IDs de clases eliminadas
+    };
+  };
+
+  // Function to clean data sent for creation
+  const prepareCreateData = () => {
+    return prepareBaseSubjectData();
+  };
+
+  // Function to clean data sent for update
+  const prepareUpdateData = () => {
+    return {
+      ...prepareBaseSubjectData(),
+      deletedClassIds,
     };
   };
 
@@ -339,7 +382,9 @@ export default function SubjectsForm() {
     }
 
     // Preparar datos con eliminación
-    const cleanSubjectData = prepareSubmitData();
+    const cleanSubjectData = isEditMode
+      ? prepareUpdateData()
+      : prepareCreateData();
 
     setIsSending(true);
     setServerError("");
@@ -636,6 +681,20 @@ export default function SubjectsForm() {
                       const isDeleting = deletingClassIds.includes(classItem.tempId);
                       const isAdding = addingClassIds.includes(classItem.tempId);
 
+                      const classExternalConflicts = externalConflicts.filter(
+                        (conflict) => conflict.tempId === classItem.tempId
+                      );
+
+                      const classInternalConflicts = internalConflicts.filter(
+                        (conflict) =>
+                          conflict.classA === classItem.tempId ||
+                          conflict.classB === classItem.tempId
+                      );
+
+                      const conflictCount =
+                        classExternalConflicts.length +
+                        classInternalConflicts.length;
+
                       return (
                         <div
                           key={classItem.tempId}
@@ -657,6 +716,11 @@ export default function SubjectsForm() {
                               classData={classItem}
                               isEditMode={isEditMode}
                               isNew={!classItem.id}
+                              conflicts={{
+                                external: classExternalConflicts,
+                                internal: classInternalConflicts,
+                              }}
+                              conflictCount={conflictCount}
                               onChange={(field, value) =>
                                 handleClassChange(classItem.tempId, field, value)
                               }

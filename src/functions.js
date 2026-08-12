@@ -37,6 +37,16 @@ export const DAY_NAMES = {
   7: "Dom",
 };
 
+export const DAY_NAMES_COMPLETE = {
+  1: "Lunes",
+  2: "Martes",
+  3: "Miércoles",
+  4: "Jueves",
+  5: "Viernes",
+  6: "Sábado",
+  7: "Domingo",
+};
+
 export const getClassDays = (classes) => {
   if (!classes || classes.length === 0) {
     return "Sin clases";
@@ -51,4 +61,28 @@ export const getClassDays = (classes) => {
   }
 
   return days.map((day) => DAY_NAMES[day]).join(" • ");
+};
+
+export const getDaysLabel = (days) => {
+  if (!days || days.length === 0) {
+    return "Sin días";
+  }
+
+  const uniqueDays = [...new Set(days)].sort((a, b) => a - b);
+
+  if (uniqueDays.length === 7) {
+    return "Todos los días";
+  }
+
+  const dayNames = uniqueDays.map((day) => DAY_NAMES_COMPLETE[day]);
+
+  if (dayNames.length === 1) {
+    return dayNames[0];
+  }
+
+  if (dayNames.length === 2) {
+    return `${dayNames[0]} y ${dayNames[1]}`;
+  }
+
+  return `${dayNames.slice(0, -1).join(", ")} y ${dayNames.at(-1)}`;
 };
