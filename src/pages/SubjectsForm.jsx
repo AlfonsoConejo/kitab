@@ -17,11 +17,10 @@ export default function SubjectsForm() {
   const location = useLocation();
 
   //Get period from context
-  const { selectedPeriod } = usePeriod();
-
-  if (!selectedPeriod) {
-    return <Navigate to="/app/periods" replace />;
-  }
+  const {
+    selectedPeriod,
+    isLoadingPeriod
+  } = usePeriod();
 
   //Detect if it is a Creation Form or an Edition Form
   const { id } = useParams();
@@ -29,7 +28,7 @@ export default function SubjectsForm() {
 
   //States
   const [subject, setSubject] = useState({ 
-    periodId: selectedPeriod.id, 
+    periodId: selectedPeriod?.id, 
     name: '', 
     teacher: '', 
     color: '#EF4444',
@@ -46,6 +45,8 @@ export default function SubjectsForm() {
 
   const [externalConflicts, setExternalConflicts] = useState([]);
   const [internalConflicts, setInternalConflicts] = useState([]);
+  const [isRecalculatingConflicts, setIsRecalculatingConflicts] = useState(false);
+  const conflictCalculationId = useRef(0)
 
   console.log("Estos son los cruces con otra materias: ", externalConflicts);
   console.log("Estos son los cruces con esta materia: ", internalConflicts);
@@ -61,7 +62,7 @@ export default function SubjectsForm() {
     document.title = isEditMode ? "Editar materia" : "Nueva materia";
   }, [isEditMode]); 
 
-  // Get the information of the subject if user is editing
+  // Get the information of the subject and its conflicts if user is editing
   useEffect(() => {
     if (!isEditMode) return;
 
@@ -85,7 +86,7 @@ export default function SubjectsForm() {
           days: cls.days,
           type: cls.type,
           mode: cls.mode,
-          classroom: cls.classroom,
+          classroom: cls.classroom ?? "",
           startTime: cls.startTime,
           endTime: cls.endTime,
         }));
@@ -101,28 +102,52 @@ export default function SubjectsForm() {
           classes,
         });
 
-        const conflictsRes = await apiFetch(
-          `/api/subjects/${subjectData.data.id}/classes/check-conflicts`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              classes,
-            }),
-          }
-        );
+        const [externalRes, internalRes] = await Promise.all([
+          apiFetch(
+            `/api/subjects/${subjectData.data.id}/classes/check-external-conflicts`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                classes,
+              }),
+            }
+          ),
 
-        const conflictsData = await conflictsRes.json();
+          apiFetch(
+            `/api/subjects/${subjectData.data.id}/classes/check-internal-conflicts`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                classes,
+              }),
+            }
+          ),
+        ]);
 
-        if (!conflictsRes.ok) {
-          setServerError(conflictsData.message);
+        const [externalData, internalData] = await Promise.all([
+          externalRes.json(),
+          internalRes.json(),
+        ]);
+
+        if (!externalRes.ok) {
+          notify(externalData.message);
           return;
         }
 
-        setExternalConflicts(conflictsData.externalConflicts);
-        setInternalConflicts(conflictsData.internalConflicts);
+        if (!internalRes.ok) {
+          notify(internalData.message);
+          return;
+        }
+
+
+        setExternalConflicts(externalData.externalConflicts);
+        setInternalConflicts(internalData.internalConflicts);
 
       } catch (error) {
         console.error("Error fetching subject:", error);
@@ -201,6 +226,7 @@ export default function SubjectsForm() {
     if (!isEditMode && selectedPeriod) {
       setSubject((prev) => ({
         ...prev,
+        periodId: selectedPeriod.id,
         startDate: selectedPeriod.startDate,
         endDate: selectedPeriod.endDate,
       }));
@@ -222,7 +248,12 @@ export default function SubjectsForm() {
 
       setIsManualDate(!usePeriodDates);
     }
-  }, [isEditMode, subject, selectedPeriod]);
+  }, [
+    isEditMode,
+    selectedPeriod,
+    subject.startDate,
+    subject.endDate,
+  ]);
 
 
   const handleUsePeriodDates = () => {
@@ -247,57 +278,197 @@ export default function SubjectsForm() {
     setIsManualDate(true);
   };
 
-  function handleClassChange(tempId, field, value) {
-    setSubject((prev) => ({
-      ...prev,
-      classes: prev.classes.map((classItem) => {
-        if (classItem.tempId !== tempId) {
-          return classItem;
-        }
-
-        if (field === "mode" && value === "online") {
-          return {
-            ...classItem,
-            mode: value,
-            classroom: null,
-          };
-        }
-
-        return {
-          ...classItem,
-          [field]: value,
-        };
-      }),
-    }));
-  }
-
-  function handleDeleteClass(tempId) {
-     // Buscar la clase a eliminar
-    const classToDelete = subject.classes.find(
-      c => c.tempId === tempId
+  const handleClassChange = async (tempId, field, value) => {
+    const currentClass = subject.classes.find(
+      (classItem) => classItem.tempId === tempId
     );
-    
-    if (!classToDelete) return;
 
-    // Si la clase tiene ID (está en la BD), marcarla para eliminar
-    if (classToDelete.id) {
-      setDeletedClassIds(prev => [...prev, classToDelete.id]);
+    if (!currentClass) return;
+
+    const updatedClass = {
+      ...currentClass,
+      [field]: value,
+    };
+
+    if (field === "mode" && value === "online") {
+      updatedClass.classroom = null;
     }
 
-    // Iniciar animación
-    setDeletingClassIds(prev => [...prev, tempId]);
+    const updatedClasses = subject.classes.map((classItem) =>
+      classItem.tempId === tempId
+        ? updatedClass
+        : classItem
+    );
 
-    // Esperar a que termine la animación
+    setSubject((prev) => ({
+      ...prev,
+      classes: updatedClasses,
+    }));
+
+    // Solo revisar conflictos si cambió el horario
+    if (
+      field !== "days" &&
+      field !== "startTime" &&
+      field !== "endTime"
+    ) {
+      return;
+    }
+
+    // Si el horario está incompleto, no tiene sentido consultar
+    const hasCompleteSchedule =
+      updatedClass.days?.length > 0 &&
+      updatedClass.startTime &&
+      updatedClass.endTime;
+
+    if (!hasCompleteSchedule) {
+      setExternalConflicts((prev) =>
+        prev.filter((conflict) => conflict.tempId !== tempId)
+      );
+
+      setInternalConflicts((prev) =>
+        prev.filter(
+          (conflict) =>
+            conflict.classA !== tempId &&
+            conflict.classB !== tempId
+        )
+      );
+
+      return;
+    }
+
+    conflictCalculationId.current += 1;
+    const calculationId = conflictCalculationId.current;
+
+    setIsRecalculatingConflicts(true);
+
+    try {
+      await Promise.all([
+        recalculateExternalConflicts(updatedClass, calculationId),
+        recalculateInternalConflicts(updatedClasses, calculationId),
+      ]);
+    } finally {
+      if (calculationId === conflictCalculationId.current) {
+        setIsRecalculatingConflicts(false);
+      }
+    }
+  };
+
+  const recalculateExternalConflicts = async (updatedClass, calculationId) => {
+    console.log("Recalculando cruces externos");
+    try {
+      const res = await apiFetch(
+        `/api/subjects/${subject.id}/classes/check-external-conflicts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            classes: [updatedClass],
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        notify("error", data.message);
+        return;
+      }
+
+      if (calculationId !== conflictCalculationId.current) {
+        return;
+      }
+
+      // Reemplazar únicamente los conflictos de esta clase
+      setExternalConflicts((prev) => {
+        const filtered = prev.filter(
+          (conflict) => conflict.tempId !== updatedClass.tempId
+        );
+
+        return [...filtered, ...data.externalConflicts];
+      });
+
+    } catch (error) {
+      console.error("Error recalculando conflictos externos:", error);
+      notify("error", "No se pudieron comprobar los conflictos.");
+    }
+  };
+
+  const recalculateInternalConflicts = async (updatedClasses, calculationId) => {
+    console.log("Recalculando cruces internos");
+    try {
+      const res = await apiFetch(
+        `/api/subjects/${subject.id}/classes/check-internal-conflicts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            classes: updatedClasses,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        notify("error", data.message);
+        return;
+      }
+
+      if (calculationId !== conflictCalculationId.current) {
+        return;
+      }
+
+      // Los internos siempre se reemplazan completos
+      setInternalConflicts(data.internalConflicts);
+
+    } catch (error) {
+      console.error("Error recalculando conflictos internos:", error);
+      notify("error", "No se pudieron comprobar los conflictos.");
+    }
+  };
+
+  function handleDeleteClass(tempId) {
+    const classToDelete = subject.classes.find(
+      (c) => c.tempId === tempId
+    );
+
+    if (!classToDelete) return;
+
+    // Si existe en BD, marcar para eliminar
+    if (classToDelete.id) {
+      setDeletedClassIds((prev) => [...prev, classToDelete.id]);
+    }
+
+    // Eliminar inmediatamente sus conflictos
+    setExternalConflicts((prev) =>
+      prev.filter((conflict) => conflict.tempId !== tempId)
+    );
+
+    setInternalConflicts((prev) =>
+      prev.filter(
+        (conflict) =>
+          conflict.classA !== tempId &&
+          conflict.classB !== tempId
+      )
+    );
+
+    // Animación
+    setDeletingClassIds((prev) => [...prev, tempId]);
+
     setTimeout(() => {
-      setSubject(prev => ({
+      setSubject((prev) => ({
         ...prev,
         classes: prev.classes.filter(
-          classItem => classItem.tempId !== tempId
+          (classItem) => classItem.tempId !== tempId
         ),
       }));
 
-      setDeletingClassIds(prev =>
-        prev.filter(id => id !== tempId)
+      setDeletingClassIds((prev) =>
+        prev.filter((id) => id !== tempId)
       );
     }, 300);
   }
@@ -429,6 +600,14 @@ export default function SubjectsForm() {
       setIsSending(false);
     }
   };
+
+  if (isLoadingPeriod) {
+    return <SectionLoader />;
+  }
+
+  if (!selectedPeriod) {
+    return <Navigate to="/app/periods" replace />;
+  }
 
   return (
     <div className="flex flex-col flex-1 gap-6">
@@ -717,10 +896,11 @@ export default function SubjectsForm() {
                               isEditMode={isEditMode}
                               isNew={!classItem.id}
                               conflicts={{
-                                external: classExternalConflicts,
-                                internal: classInternalConflicts,
+                                externalConflicts: classExternalConflicts,
+                                internalConflicts: classInternalConflicts,
                               }}
                               conflictCount={conflictCount}
+                              isRecalculatingConflicts={isRecalculatingConflicts}
                               onChange={(field, value) =>
                                 handleClassChange(classItem.tempId, field, value)
                               }

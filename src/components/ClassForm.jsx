@@ -2,7 +2,7 @@ import { Minus, ChevronDown, TriangleAlert } from "lucide-react";
 import { formatTime, getDaysLabel } from "@/functions";
 import { useState } from "react";
 
-const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, onChange, onDelete }) => {
+const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isRecalculatingConflicts, onChange, onDelete }) => {
 
   const { externalConflicts, internalConflicts } = conflicts;
 
@@ -293,66 +293,98 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, onC
       </div>
 
       { // Accordeon with schedule conflicts
-        conflictCount > 0 && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-yellow-600">
-          <button
-            type="button"
-            onClick={() => setShowConflicts((prev) => !prev)}
-            className="
-              flex w-full items-center justify-between
-              px-4 py-3
-              text-sm font-medium text-white
-              bg-yellow-600
-              transition-colors
-              cursor-pointer
-            "
-          >
-            <span className="inline-flex items-center gap-2">
-              <TriangleAlert size={20}/> {conflictCount}{" "}
-              {conflictCount === 1 ? "conflicto" : "conflictos"} de horario
-            </span>
-
-            <ChevronDown
-              size={20}
-              className={`transition-transform duration-200 ${
-                showConflicts ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-
-          {showConflicts && (
-            <div className=" px-4 py-3">
-              <div className="flex flex-col gap-3">
-                {conflicts.external.map((conflict, index) => (
-                  <div key={`external-${index}`} className="text-sm">
-                    <p className="font-medium text-gray-200">
-                      {conflict.subject}
-                    </p>
-
-                    <p className="text-gray-400">
-                      {getDaysLabel(conflict.conflictDays)+" "}
-                      {`de ${formatTime(conflict.startTime)} a ${formatTime(conflict.endTime)}`}
-                    </p>
-                  </div>
-                ))}
-
-                {conflicts.internal.map((conflict, index) => (
-                  <div key={`internal-${index}`} className="text-sm">
-                    <p className="font-medium text-gray-200">
-                      Otra clase de esta materia
-                    </p>
-
-                    <p className="text-gray-400">
-                      {getDaysLabel(conflict.conflictDays)+" "}
-                      {`de ${formatTime(conflict.classAStartTime)} a ${formatTime(conflict.classAEndTime)}`}
-                    </p>
-                  </div>
-                ))}
-              </div>
+        isRecalculatingConflicts ? (
+          <div className="mt-4 overflow-hidden rounded-lg border border-gray-600">
+            <div
+              className="
+                flex w-full items-center gap-2
+                px-4 py-3
+                text-sm font-medium text-gray-300
+                bg-gray-700
+              "
+            >
+              <div className="loader" />
+              Recalculando conflictos...
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          conflictCount > 0 && (
+            <div className="mt-4 overflow-hidden rounded-lg border border-yellow-600">
+              <button
+                type="button"
+                onClick={() => setShowConflicts((prev) => !prev)}
+                className="
+                  flex w-full items-center justify-between
+                  px-4 py-3
+                  text-sm font-medium text-white
+                  bg-yellow-600
+                  transition-colors
+                  cursor-pointer
+                "
+              >
+                <span className="inline-flex items-center gap-2">
+                  <TriangleAlert size={20}/> {conflictCount}{" "}
+                  {conflictCount === 1 ? "conflicto" : "conflictos"} de horario
+                </span>
+
+                <ChevronDown
+                  size={20}
+                  className={`transition-transform duration-200 ${
+                    showConflicts ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {showConflicts && (
+                <div className=" px-4 py-3">
+                  <div className="flex flex-col gap-3">
+                    {externalConflicts.map((conflict, index) => (
+                      <div key={`external-${index}`} className="text-sm">
+                        <p className="font-medium text-gray-200">
+                          {conflict.subject}
+                        </p>
+
+                        <p className="text-gray-400">
+                          {getDaysLabel(conflict.conflictDays)+" "}
+                          {`de ${formatTime(conflict.startTime)} a ${formatTime(conflict.endTime)}`}
+                        </p>
+                      </div>
+                    ))}
+
+                    {internalConflicts.map((conflict, index) => {
+                      const isClassA = conflict.classA === classData.tempId;
+                      return(
+                        <div key={`internal-${index}`} className="text-sm">
+                          <p className="font-medium text-gray-200">
+                            Otra clase de esta materia
+                          </p>
+
+                          <p className="text-gray-400">
+                            {getDaysLabel(conflict.conflictDays)+" "}
+                            {`de ${
+                              formatTime(
+                                isClassA
+                                  ? conflict.classBStartTime
+                                  : conflict.classAStartTime
+                              )
+                            } a ${
+                              formatTime(
+                                isClassA
+                                  ? conflict.classBEndTime
+                                  : conflict.classAEndTime
+                              )
+                            }`}
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        )
+      }
     </div>
   );
 };

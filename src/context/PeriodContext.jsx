@@ -4,14 +4,17 @@ import { useAuth } from "../customHooks/useAuth";
 export const PeriodContext = createContext();
 
 export const PeriodProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, authLoading } = useAuth();
 
   const [selectedPeriod, setSelectedPeriod] = useState(null);
+  const [isLoadingPeriod, setIsLoadingPeriod] = useState(true);
 
-  // Recuperar periodo guardado cuando cambia el usuario
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user?.id) {
       setSelectedPeriod(null);
+      setIsLoadingPeriod(false);
       return;
     }
 
@@ -29,11 +32,12 @@ export const PeriodProvider = ({ children }) => {
     } else {
       setSelectedPeriod(null);
     }
-  }, [user?.id]);
 
-  // Guardar periodo cuando cambie
+    setIsLoadingPeriod(false);
+  }, [user?.id, authLoading]);
+
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || isLoadingPeriod) return;
 
     const key = `selectedPeriod_${user.id}`;
 
@@ -46,13 +50,14 @@ export const PeriodProvider = ({ children }) => {
       key,
       JSON.stringify(selectedPeriod)
     );
-  }, [selectedPeriod, user?.id]);
+  }, [selectedPeriod, user?.id, isLoadingPeriod]);
 
   return (
     <PeriodContext.Provider
       value={{
         selectedPeriod,
         setSelectedPeriod,
+        isLoadingPeriod,
       }}
     >
       {children}
