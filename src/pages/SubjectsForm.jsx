@@ -1008,9 +1008,6 @@ export default function SubjectsForm() {
                     text-white
                     transition
                     hover:bg-gray-600
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-cyan-500
                     cursor-pointer
                   "
                 >

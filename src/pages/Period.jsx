@@ -214,98 +214,109 @@ function PeriodSection({
       </div>
 
       {/* Table with card-style */}
-      <div className="overflow-hidden rounded-xl border border-gray-700 bg-gray-800/50">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-700/50 bg-gray-800">
-              <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-4 py-3">
-                Periodo
-              </th>
-              <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-4 py-3">
-                Fechas
-              </th>
-              <th className="text-right text-xs font-medium text-gray-400 uppercase tracking-wider px-4 py-3">
-                Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {periods.map((period, index) => {
-              const isSelected = period.id === selectedPeriod?.id;
-              return (
-                <tr
-                  key={period.id}
-                  className={`
-                    border-b border-gray-700/30 transition-colors
-                    ${index === periods.length - 1 ? "border-b-0" : ""}
-                    ${isSelected ? "bg-sky-500/10" : "hover:bg-gray-700/10"}
-                  `}
-                >
-                  {/* Columna: Nombre + color */}
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-3 w-3 rounded-full shrink-0"
-                        style={{ backgroundColor: period.color }}
-                      />
-                      <span className="font-medium text-white truncate">
-                        {period.name}
+      <div className="overflow-x-auto">
+        <div className="w-full min-w-[540px] overflow-hidden rounded-lg shadow-md">
+          <table className="w-full text-sm text-left text-gray-400 bg-gray-800">
+            <thead className="bg-gray-700 text-xs uppercase text-gray-400">
+              <tr>
+                <th scope="col" className="text-left px-4 py-3">
+                  Periodo
+                </th>
+                <th scope="col" className="text-left px-4 py-3">
+                  Inicio
+                </th>
+                <th scope="col" className="text-left px-4 py-3">
+                  Fin
+                </th>
+                <th  scope="col" className="text-right px-4 py-3">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {periods.map((period, index) => {
+                const isSelected = period.id === selectedPeriod?.id;
+                return (
+                  <tr
+                    key={period.id}
+                    className={`
+                      border-b border-gray-700
+                      ${index === periods.length - 1 ? "border-b-0" : ""}
+                    `}
+                  >
+                    {/* Columna: Nombre + color */}
+                    <th 
+                      scope="row" 
+                      className="px-4 py-3 font-medium text-white whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-3 w-3 rounded-full shrink-0"
+                            style={{ backgroundColor: period.color }}
+                          />
+                          <span className="font-medium text-white truncate">
+                            {period.name}
+                          </span>
+                        </div>
+                    </th>
+
+                    {/* Columna: Fechas de inicio */}
+                    <td scope="row" className="px-4 py-3">
+                      <span className="text-sm text-gray-300 whitespace-nowrap">
+                        {formatDate(period.startDate)}
                       </span>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Columna: Fechas */}
-                  <td className="px-4 py-3">
-                    <span className="text-sm text-gray-300 whitespace-nowrap">
-                      {formatDate(period.startDate)}
-                      <span className="text-gray-500 mx-1.5">→</span>
-                      {formatDate(period.endDate)}
-                    </span>
-                  </td>
+                    {/* Columna: Fechas de finalización*/}
+                    <td scope="row" className="px-4 py-3">
+                      <span className="text-sm text-gray-300 whitespace-nowrap">
+                        {formatDate(period.endDate)}
+                      </span>
+                    </td>
 
-                  {/* Columna: Acciones */}
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      {/* Estado / Botón seleccionar */}
-                      {isSelected ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-sky-400 bg-sky-500/10 px-3 py-1.5 rounded-lg">
-                          <CheckCircle size={14} />
-                          Seleccionado
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => onSelect?.(period.id)}
-                          className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                        >
-                          <Circle size={14} />
-                          Seleccionar
-                        </button>
-                      )}
+                    {/* Columna: Acciones */}
+                    <td scope="row" className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        {/* Estado / Botón seleccionar */}
+                        {isSelected ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-blue-900 text-blue-300 px-3 py-1.5 rounded">
+                            <CheckCircle size={14} />
+                            Seleccionado
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => onSelect?.(period.id)}
+                            className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition-colors cursor-pointer"
+                          >
+                            <Circle size={14} />
+                            Seleccionar
+                          </button>
+                        )}
 
-                      {/* Botones editar/eliminar */}
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => onEdit?.(period)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
-                          title="Editar"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => onDelete?.(period)}
-                          className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                          title="Eliminar"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {/* Botones editar/eliminar */}
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => onEdit?.(period)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
+                            title="Editar"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => onDelete?.(period)}
+                            className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

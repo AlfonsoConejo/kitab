@@ -338,7 +338,7 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
               "
             >
               <div className="yellow-loader" />
-              Recalculando conflictos...
+              Calculando conflictos...
             </div>
           </div>
         ) : (
