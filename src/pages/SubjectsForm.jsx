@@ -112,20 +112,22 @@ export default function SubjectsForm() {
 
         const [externalRes, internalRes] = await Promise.all([
           apiFetch(
-            `/api/subjects/${subjectData.data.id}/classes/check-external-conflicts`,
+            `/api/subjects/classes/check-external-conflicts`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
+                periodId: subjectData.data.periodId,
+                subjectId: subjectData.data.id,
                 classes,
               }),
             }
           ),
 
           apiFetch(
-            `/api/subjects/${subjectData.data.id}/classes/check-internal-conflicts`,
+            `/api/subjects/classes/check-internal-conflicts`,
             {
               method: "POST",
               headers: {
@@ -329,6 +331,9 @@ export default function SubjectsForm() {
       updatedClass.startTime &&
       updatedClass.endTime;
 
+    conflictCalculationId.current += 1;
+    const calculationId = conflictCalculationId.current;
+
     if (!hasCompleteSchedule) {
       setExternalConflicts((prev) =>
         prev.filter((conflict) => conflict.tempId !== tempId)
@@ -344,9 +349,6 @@ export default function SubjectsForm() {
 
       return;
     }
-
-    conflictCalculationId.current += 1;
-    const calculationId = conflictCalculationId.current;
 
     setIsRecalculatingConflicts(true);
 
@@ -366,13 +368,15 @@ export default function SubjectsForm() {
     console.log("Recalculando cruces externos");
     try {
       const res = await apiFetch(
-        `/api/subjects/${subject.id}/classes/check-external-conflicts`,
+        `/api/subjects/classes/check-external-conflicts`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            periodId: subject.periodId,
+            ...(subject.id && { subjectId: subject.id }),
             classes: [updatedClass],
           }),
         }
@@ -408,7 +412,7 @@ export default function SubjectsForm() {
     console.log("Recalculando cruces internos");
     try {
       const res = await apiFetch(
-        `/api/subjects/${subject.id}/classes/check-internal-conflicts`,
+        `/api/subjects/classes/check-internal-conflicts`,
         {
           method: "POST",
           headers: {
