@@ -19,7 +19,7 @@ export default function ColorPicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-gray-300">
+      <label className="mb-2 text-sm font-medium text-white">
         {label}
       </label>
 
@@ -27,21 +27,27 @@ export default function ColorPicker({
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className={`
-            w-full
+          className={` 
             flex
             items-center
             justify-between
+          bg-gray-700
+            w-full
             rounded-lg
             border
-            px-4
-            py-3
+            p-2.5
+            text-sm text-white
+          placeholder-gray-400
+            outline-none
             transition-colors
-            bg-gray-900
+            focus:border-primary-500
+            focus:ring-2
+          focus:ring-blue-500
+
             ${
               isOpen
-                ? "border-cyan-600"
-                : "border-gray-700"
+                ? "border-blue-500"
+                : "border-gray-600"
             }
           `}
         >
@@ -51,7 +57,7 @@ export default function ColorPicker({
               style={{ backgroundColor: value }}
             />
 
-            <span className="text-gray-300">
+            <span className="text-white">
               Seleccionar color
             </span>
           </div>

@@ -639,409 +639,469 @@ export default function SubjectsForm() {
 
   return (
     <div className="flex flex-col flex-1 gap-6">
-        <div>
-          <h1 className="text-3xl font-semibold text-white">
-            {isEditMode ? "Editar Materia" : "Nueva materia"}
-          </h1>
-        </div>
+      {/* Page header */}
+      <div>
+        <h1 className="text-3xl font-semibold text-white">
+          {isEditMode ? "Editar materia" : "Nueva materia"}
+        </h1>
 
-        <div className="flex-1">
-          {isLoadingSubject ? (
-            <SectionLoader />
-          ) : (
-            <div className="flex flex-col rounded-lg border border-gray-800 bg-gray-800 p-8 gap-8">
-              {/* Form */}
-              <form
-                onSubmit={handleSubmit}
-                className="flex flex-col gap-6"
-                autoComplete="off"
-              >
-                {/** Subject Information */}
+        <p className="mt-1 text-sm text-gray-400">
+          {isEditMode
+            ? "Modifica la información y las clases de esta materia."
+            : "Agrega una materia y configura sus clases."}
+        </p>
+      </div>
+
+      <div className="flex-1">
+        {isLoadingSubject ? (
+          <SectionLoader />
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-6"
+            autoComplete="off"
+          >
+            {/* Subject information */}
+            <section className="p-4 sm:p-5 rounded-lg border-gray-700 bg-gray-800 shadow">
+              {/* Section header */}
+              <div className="flex items-center pb-4 mb-4 rounded-t gap-4 border-b sm:mb-5 border-gray-600">
                 <div>
-                  {/* Subject header*/}
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-cyan-900/40">
-                      <BookOpen size={24} />
-                    </div>
+                  <h3 class="text-lg font-semibold text-white">
+                      Información de la materia
+                  </h3>
 
-                    <div>
-                      <h2 className="text-xl font-semibold text-white">
-                        Información de la materia
-                      </h2>
+                  <p className="text-sm text-gray-400">
+                    Completa los datos generales de la materia.
+                  </p>
+                </div>
+              </div>
 
-                      <p className="text-sm text-gray-400">
-                        Completa los datos de la materia.
-                      </p>
-                    </div>
-                  </div>
+              {/* Section body */}
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Subject name */}
+                <div className="flex flex-col gap-2">
+                  <label for="name" className="mb-2 text-sm font-medium text-white">
+                    Nombre de la materia
+                  </label>
 
-                  <div className="grid gap-6 md:grid-cols-2">
-                    {/* Subject Name */}
-                    <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="name"
-                        className="text-sm font-medium text-gray-300"
-                      >
-                        Nombre de la materia
-                      </label>
+                  <input
+                    onChange={handleSubjectChange}
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Geomática"
+                    maxLength={40}
+                    value={subject.name}
 
-                      <input
-                        onChange={handleSubjectChange}
-                        id="name"
-                        name="name"
-                        type="text"
-                        placeholder="Geomática"
-                        maxLength={40}
-                        value={subject.name}
-                        className="
-                          rounded-lg
-                          border
-                          border-gray-700
-                          bg-gray-900
-                          px-4
-                          py-3
-                          text-white
-                          placeholder:text-gray-500
-                          outline-none
-                          focus:border-cyan-600
-                        "
-                      />
-                    </div>
-
-                    {/* Teacher Name */}
-                    <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="teacher"
-                        className="text-sm font-medium text-gray-300"
-                      >
-                        Nombre del profesor{" "}
-                        <span className="font-normal text-gray-500">
-                          (opcional)
-                        </span>
-                      </label>
-
-                      <input
-                        onChange={handleSubjectChange}
-                        id="teacher"
-                        name="teacher"
-                        type="text"
-                        placeholder="José Hernández"
-                        maxLength={50}
-                        value={subject.teacher}
-                        className="
-                          rounded-lg
-                          border
-                          border-gray-700
-                          bg-gray-900
-                          px-4
-                          py-3
-                          text-white
-                          placeholder:text-gray-500
-                          outline-none
-                          focus:border-cyan-600
-                        "
-                      />
-                    </div>
-
-                    {/* Color */}
-                    <div className="flex flex-col gap-2" >
-                      <ColorPicker
-                        value={subject.color}
-                        onChange={handleColorChange}
-                      />
-                    </div>
-
-                    {/* Switch for date selection */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-300">
-                        Fechas de inicio y término
-                      </label>
-
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={handleUsePeriodDates}
-                          className={`
-                            px-3 py-2
-                            rounded-lg
-                            text-sm font-semibold
-                            transition-colors
-                            cursor-pointer
-
-                            ${
-                              isManualDate === false
-                                ? "bg-cyan-600 text-white"
-                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                            }
-                          `}
-                        >
-                          {"Periodo académico"}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={handleManualDate}
-                          className={`
-                            px-3 py-2
-                            rounded-lg
-                            text-sm font-semibold
-                            transition-colors
-                            cursor-pointer
-
-                            ${
-                              isManualDate === true
-                                ? "bg-cyan-600 text-white"
-                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                            }
-                          `}
-                        >
-                          {"Manual"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                    class="" 
+                    className="
+                      block 
+                      bg-gray-700
+                      w-full
+                      rounded-lg
+                      border border-gray-600
+                      p-2.5
+                      text-sm text-white
+                      placeholder-gray-400
+                      outline-none
+                      transition
+                      focus:border-primary-500
+                      focus:ring-2
+                      focus:ring-blue-500
+                    "
+                  />
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
-
-                  {/* Start Date */}
+                  {/* Teacher */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-300">
-                      Fecha de inicio
+                    <label htmlFor="teacher" className="mb-2 text-sm font-medium text-white">
+                      Nombre del profesor
+                      <span className="ml-1 font-normal text-gray-400">
+                        (opcional)
+                      </span>
                     </label>
 
                     <input
-                      name="startDate"
-                      type="date"
-                      disabled={isManualDate !== true} 
-                      value={subject.startDate}
-                      min={selectedPeriod.startDate}
-                      max={isManualDate === true  ? subject.endDate : selectedPeriod.endDate}
                       onChange={handleSubjectChange}
+                      id="teacher"
+                      name="teacher"
+                      type="text"
+                      placeholder="José Hernández"
+                      maxLength={50}
+                      value={subject.teacher}
                       className="
+                        block 
+                        bg-gray-700
+                        w-full
                         rounded-lg
-                        border
-                        border-gray-700
-                        bg-gray-900
-                        px-4
-                        py-3
-                        text-white
+                        border border-gray-600
+                        p-2.5
+                        text-sm text-white
+                        placeholder-gray-400
                         outline-none
-                        focus:border-cyan-600
-
-                        disabled: disabled:cursor-not-allowed disabled:opacity-50
+                        transition
+                        focus:border-primary-500
+                        focus:ring-2
+                        focus:ring-blue-500
                       "
                     />
                   </div>
 
-                  {/* End Date */}
+                  {/* Color */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-300">
+                    <ColorPicker
+                      value={subject.color}
+                      onChange={handleColorChange}
+                    />
+                  </div>
+
+                  {/* Date mode */}
+                  <div className="flex flex-col gap-2">
+                    <label className="mb-2 text-sm font-medium text-white">
+                      Fechas de inicio y término
+                    </label>
+
+                    <div 
+                      className="
+                        inline-flex w-fit rounded-lg bg-gray-700 p-1
+                        
+                      "
+                    >
+                      <button
+                        type="button"
+                        onClick={handleUsePeriodDates}
+                        className={`
+                          rounded-md
+                          px-3
+                          py-1.5
+                          text-sm
+                          font-medium
+                          transition
+                          cursor-pointer
+                          ${
+                            isManualDate === false
+                              ? "bg-gray-600 text-white shadow-sm"
+                              : "text-gray-300 hover:text-white"
+                          }
+                        `}
+                      >
+                        Periodo académico
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleManualDate}
+                        className={`
+                          rounded-md
+                          px-3
+                          py-1.5
+                          text-sm
+                          font-medium
+                          transition
+                          cursor-pointer
+                          ${
+                            isManualDate === true
+                              ? "bg-gray-600 text-white shadow-sm"
+                              : "text-gray-300 hover:text-white"
+                          }
+                        `}
+                      >
+                        Manual
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Start date */}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="startDate" className="mb-2 text-sm font-medium text-white">
+                      Fecha de inicio
+                    </label>
+
+                    <input
+                      id="startDate"
+                      name="startDate"
+                      type="date"
+                      disabled={isManualDate !== true}
+                      value={subject.startDate}
+                      min={selectedPeriod.startDate}
+                      max={
+                        isManualDate === true
+                          ? subject.endDate
+                          : selectedPeriod.endDate
+                      }
+                      onChange={handleSubjectChange}
+                      className="
+                        block w-full
+                        bg-gray-700
+                        rounded-lg
+                        border border-gray-600
+                        p-2.5
+                        text-sm text-white
+                        placeholder-gray-400
+                        outline-none
+                        transition
+                        focus:border-primary-500
+                        focus:ring-2
+                        focus:ring-blue-500
+                        disabled:cursor-not-allowed
+                        disabled:opacity-50
+                      "
+                    />
+                  </div>
+
+                  {/* End date */}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="endDate" className="mb-2 text-sm font-medium text-white">
                       Fecha de término
                     </label>
 
                     <input
-                      type="date"
+                      id="endDate"
                       name="endDate"
-                      disabled={isManualDate !== true} 
+                      type="date"
+                      disabled={isManualDate !== true}
                       value={subject.endDate}
-                      min={isManualDate === true ? subject.startDate : selectedPeriod.startDate}
+                      min={
+                        isManualDate === true
+                          ? subject.startDate
+                          : selectedPeriod.startDate
+                      }
                       max={selectedPeriod.endDate}
                       onChange={handleSubjectChange}
-                      className={`
+                      className="
+                        block w-full
+                        bg-gray-700
                         rounded-lg
-                        border
-                        border-gray-700
-                        bg-gray-900
-                        px-4
-                        py-3
-                        text-white
+                        border border-gray-600
+                        p-2.5
+                        text-sm text-white
+                        placeholder-gray-400
                         outline-none
-                        focus:border-cyan-600
-
-                        disabled: disabled:cursor-not-allowed disabled:opacity-50
-                      `}
+                        transition
+                        focus:border-primary-500
+                        focus:ring-2
+                        focus:ring-blue-500
+                        disabled:cursor-not-allowed
+                        disabled:opacity-50
+                      "
                     />
+                  </div>
+                </div>        
+              
+            </section>
+
+            {/* Classes */}
+            <section className="p-4 sm:p-5 rounded-lg border-gray-700 bg-gray-800 shadow">
+              {/* Section header */}
+              <div className="flex justify-between items-center pb-4 mb-4 rounded-t gap-4 border-b sm:mb-5 border-gray-600">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <h3 class="text-lg font-semibold text-white">
+                      Información de las clases
+                    </h3>
+
+                    <p className="text-sm text-gray-400">
+                      Configura los horarios y características de cada clase.
+                    </p>
                   </div>
                 </div>
 
-                {/* Classes information */}
-                <div>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-cyan-900/40">
-                      <NotebookPen size={24} />
-                    </div>
+                <span className="hidden rounded-sm bg-gray-700 px-3 py-1 text-xs font-medium text-white sm:inline-flex">
+                  {subject.classes.length}{" "}
+                  {subject.classes.length === 1 ? "clase" : "clases"}
+                </span>
+              </div>
 
-                    <div>
-                      <h2 className="text-xl font-semibold text-white">
-                        Información de las clases
-                      </h2>
+              {/* Classes */}
+              <div className="">
+                <div className="flex flex-col">
+                  {subject.classes.map((classItem) => {
+                    const isDeleting = deletingClassIds.includes(
+                      classItem.tempId
+                    );
 
-                      <p className="text-sm text-gray-400">
-                        Completa los datos de las clases.
-                      </p>
-                    </div>
-                  </div>
+                    const isAdding = addingClassIds.includes(
+                      classItem.tempId
+                    );
 
-                  <div className="flex flex-col">
-                    {subject.classes.map((classItem) => {
-                      const isDeleting = deletingClassIds.includes(classItem.tempId);
-                      const isAdding = addingClassIds.includes(classItem.tempId);
-
-                      const classExternalConflicts = externalConflicts.filter(
-                        (conflict) => conflict.tempId === classItem.tempId
+                    const classExternalConflicts =
+                      externalConflicts.filter(
+                        (conflict) =>
+                          conflict.tempId === classItem.tempId
                       );
 
-                      const classInternalConflicts = internalConflicts.filter(
+                    const classInternalConflicts =
+                      internalConflicts.filter(
                         (conflict) =>
                           conflict.classA === classItem.tempId ||
                           conflict.classB === classItem.tempId
                       );
 
-                      const conflictCount =
-                        classExternalConflicts.length +
-                        classInternalConflicts.length;
+                    const conflictCount =
+                      classExternalConflicts.length +
+                      classInternalConflicts.length;
 
-                      return (
-                        <div
-                          key={classItem.tempId}
-                          className={`
-                            grid
-                            transition-all
-                            ease-in-out
-                            ${
-                              isDeleting
-                                ? "grid-rows-[0fr] opacity-0 mb-0 duration-300"
-                                : isAdding
-                                  ? "grid-rows-[0fr] opacity-0 mb-0 duration-100"
-                                  : "grid-rows-[1fr] opacity-100 mb-4 duration-100"
+                    return (
+                      <div
+                        key={classItem.tempId}
+                        className={`
+                          grid
+                          transition-all
+                          ease-in-out
+                          ${
+                            isDeleting
+                              ? "grid-rows-[0fr] opacity-0 duration-300"
+                              : isAdding
+                                ? "grid-rows-[0fr] opacity-0 duration-100"
+                                : "grid-rows-[1fr] opacity-100 duration-100"
+                          }
+                        `}
+                      >
+                        <div className="min-h-0 overflow-hidden">
+                          <ClassForm
+                            classData={classItem}
+                            isEditMode={isEditMode}
+                            isNew={!classItem.id}
+                            conflicts={{
+                              externalConflicts:
+                                classExternalConflicts,
+                              internalConflicts:
+                                classInternalConflicts,
+                            }}
+                            conflictCount={conflictCount}
+                            isRecalculatingConflicts={
+                              isRecalculatingConflicts
                             }
-                          `}
-                        >
-                          <div className="min-h-0 overflow-hidden">
-                            <ClassForm
-                              classData={classItem}
-                              isEditMode={isEditMode}
-                              isNew={!classItem.id}
-                              conflicts={{
-                                externalConflicts: classExternalConflicts,
-                                internalConflicts: classInternalConflicts,
-                              }}
-                              conflictCount={conflictCount}
-                              isRecalculatingConflicts={isRecalculatingConflicts}
-                              onChange={(field, value) =>
-                                handleClassChange(classItem.tempId, field, value)
-                              }
-                              onDelete={() => handleDeleteClass(classItem.tempId)}
-                            />
-                          </div>
+                            onChange={(field, value) =>
+                              handleClassChange(
+                                classItem.tempId,
+                                field,
+                                value
+                              )
+                            }
+                            onDelete={() =>
+                              handleDeleteClass(classItem.tempId)
+                            }
+                          />                        
                         </div>
-                      );
-                    })}
-
-                    <div ref={classesEndRef} />
-                  </div>
-
-                  {/* "Add class" button */}
-                  <div className="flex ">
-                    <button
-                      type="button"
-                      onClick={addClass}
-                      className={`
-                        rounded-lg
-                        bg-amber-700 hover:bg-amber-600
-                        px-4
-                        py-2
-                        font-semibold
-                        text-sm
-                        text-white
-                        cursor-pointer
-                        transition-colors
-                        mt-6
-                      `}
-                    >
-                      Añadir clase
-                    </button>
-                  </div>
-                </div>
-
-                {serverError && (
-                  <div className="bg-red-500/10 border border-red-500 text-red-400 p-2 rounded text-sm">
-                    {serverError}
-                  </div>
-                )}
-
-                {/* Buttons */}
-                <div className="flex justify-end gap-3 pt-2">
-                  <Link 
-                    to={location.state?.from || "/app/subjects"}
-                    className="
-                      rounded-lg
-                      border
-                      border-gray-700
-                      px-4
-                      py-2
-                      text-gray-300
-                      hover:bg-gray-800
-                      cursor-pointer
-                      text-sm
-                      transition-colors
-                    "
-                  >
-                    Cancelar
-                  </Link>
-
-                  <button
-                    disabled={isSubmitDisabled}
-                    type="submit"
-                    className="
-                      rounded-lg
-                      bg-sky-600
-                      px-4
-                      py-2
-                      font-semibold
-                      text-sm
-                      text-white
-                      hover:bg-sky-500
-                      cursor-pointer
-                      transition-colors
-
-                      disabled:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50
-                    "
-                  >
-                    {isSending ? (
-                      <div className="loader"></div>
-                    ) : isRecalculatingConflicts ? (
-                      <div className="flex items-center gap-2">
-                        <div className="loader"></div>
-                        Comprobando...
                       </div>
-                    ) : isEditMode ? (
-                      "Guardar cambios"
-                    ) : (
-                      "Crear materia"
-                    )}
-                  </button>
+                    );
+                  })}
+
+                  <div ref={classesEndRef} />
                 </div>
-              </form>
+
+                {/* Add class */}
+                <button
+                  type="button"
+                  onClick={addClass}
+                  className="
+                    mt-5
+                    inline-flex
+                    items-center
+                    rounded-lg
+                    bg-gray-700
+                    px-4
+                    py-2.5
+                    text-sm
+                    font-medium
+                    text-white
+                    transition
+                    hover:bg-gray-600
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-cyan-500
+                    cursor-pointer
+                  "
+                >
+                  <span className="mr-2 text-lg leading-none">+</span>
+                  Añadir clase
+                </button>
+              </div>
+            </section>
+
+            {/* Server error */}
+            {serverError && (
+              <div className="rounded-lg border border-red-800 bg-red-900/20 p-4 text-sm text-red-400">
+                {serverError}
+              </div>
+            )}
+
+            {/* Form actions */}
+            <div className="flex justify-end gap-3 border-t border-gray-800 pt-4">
+              <Link
+                to={location.state?.from || "/app/subjects"}
+                className="
+                  rounded-lg
+                  border
+                  border-gray-600
+                  px-5
+                  py-2.5
+                  text-sm
+                  font-medium
+                  text-gray-300
+                  transition
+                  hover:bg-gray-800
+                  hover:text-white
+                "
+              >
+                Cancelar
+              </Link>
+
+              <button
+                disabled={isSubmitDisabled}
+                type="submit"
+                className="
+                  inline-flex
+                  items-center
+                  rounded-lg
+                  bg-cyan-600
+                  px-5
+                  py-2.5
+                  text-sm
+                  font-medium
+                  text-white
+                  transition
+                  hover:bg-cyan-700
+                  focus:outline-none
+                  focus:ring-4
+                  focus:ring-cyan-900
+                  cursor-pointer
+                  disabled:cursor-not-allowed
+                  disabled:opacity-50
+                "
+              >
+                {isSending ? (
+                  <div className="loader" />
+                ) : isRecalculatingConflicts ? (
+                  <div className="flex items-center gap-2">
+                    <div className="loader" />
+                    Comprobando...
+                  </div>
+                ) : isEditMode ? (
+                  "Guardar cambios"
+                ) : (
+                  "Crear materia"
+                )}
+              </button>
             </div>
-          )}
-          
-        </div>
-      
-        {isConfirmModalOpen && (
-          <ConfirmModal
-            title="Clases en conflicto"
-            message="Esta materia tiene clases que chocan con otras clases. ¿Seguro que deseas guardar?"
-            variant="warning"
-            onClose={() => setIsConfirmModalOpen(false)}
-            onConfirm={async () => {
-              setIsConfirmModalOpen(false);
-              setIsSending(true);
-              await saveSubject();
-            }}
-          />
+          </form>
         )}
-    </div>  
-  )
+      </div>
+
+      {isConfirmModalOpen && (
+        <ConfirmModal
+          title="Clases en conflicto"
+          message="Esta materia tiene clases que chocan con otras clases. ¿Seguro que deseas guardar?"
+          variant="warning"
+          onClose={() => setIsConfirmModalOpen(false)}
+          onConfirm={async () => {
+            setIsConfirmModalOpen(false);
+            setIsSending(true);
+            await saveSubject();
+          }}
+        />
+      )}
+    </div>
+  );
 }

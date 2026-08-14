@@ -1,4 +1,4 @@
-import { Minus, ChevronDown, TriangleAlert } from "lucide-react";
+import { X, ChevronDown, TriangleAlert } from "lucide-react";
 import { formatTime, getDaysLabel } from "@/functions";
 import { useState } from "react";
 
@@ -35,56 +35,74 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
   return (
     <div
       className={`
-        rounded-xl
-        p-5
-        flex
-        flex-col
-        gap-6
+        overflow-hidden
+        rounded-sm
+        py-4
+        px-5
+        border
         bg-gray-800
-        border-gray-600
-
+        shadow-sm
+        mt-4
         ${
           isNew && isEditMode
-            ? "border-2 border-dashed"
-            : "border"
+            ? "border-dashed border-gray-600"
+            : "border-gray-600"
         }
       `}
     >
 
-      {/* Class Header*/}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex gap-2">
-          <h3 className="text-lg font-semibold text-white">
-            Clase
-          </h3>
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4">
+        <div className="flex items-center gap-3">
+          <div>
+            <h3 className="text-base font-semibold text-white">
+              Clase
+            </h3>
+          </div>
+
           {isNew && isEditMode && (
-          <span className="text-xs font-medium bg-gray-700 px-3 py-1.5 rounded-xl">
-            Nueva
-          </span>
+            <span
+              className="
+                rounded-full
+                bg-gray-700
+                px-2.5
+                py-1
+                text-xs
+                font-medium
+                text-gray-300
+              "
+            >
+              Nueva
+            </span>
           )}
         </div>
+
         <button
           type="button"
           onClick={onDelete}
+          aria-label="Eliminar clase"
           className="
-            p-2
+            inline-flex
+            items-center
+            justify-center
             rounded-lg
-            bg-[#dc3545]
-            hover:bg-[#bb2d3b]
-            text-white
-            transition-colors
-            duration-200
+            p-1.5
+            bg-transparent
+            hover:text-white
+            text-gray-400
+            hover:bg-gray-600
             cursor-pointer
           "
         >
-          <Minus size={16} />
+          <X size={20} />
         </button>
       </div>
 
+      {/* Content */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Days selector */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">
+          <label className="mb-2 text-sm font-medium text-white">
             Días
           </label>
 
@@ -116,7 +134,7 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
 
         {/* class type */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">
+          <label className="mb-2 text-sm font-medium text-white">
             Tipo de clase
           </label>
 
@@ -125,18 +143,20 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
               value={classData.type}
               onChange={(e) => onChange("type", e.target.value)}
               className="
-                appearance-none
+                block 
+              bg-gray-700
                 w-full
                 rounded-lg
-                border
-                border-gray-700
-                bg-gray-900
-                px-4
-                pr-9
-                py-3
-                text-white
-                focus:border-cyan-600
+                border border-gray-600
+                p-2.5
+                text-sm text-white
+              placeholder-gray-400
                 outline-none
+                transition
+                focus:border-blue-500
+                focus:ring-1
+              focus:ring-blue-500
+                appearance-none
               "
             >
               <option value="theory">Teoría</option>
@@ -162,7 +182,7 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
         
         {/* Mode */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">
+          <label className="mb-2 text-sm font-medium text-white">
             Modalidad
           </label>
 
@@ -171,18 +191,21 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
               value={classData.mode}
               onChange={(e) => onChange("mode", e.target.value)}
               className="
-                appearance-none
+              block 
+              bg-gray-700
                 w-full
                 rounded-lg
-                border
-                border-gray-700
-                bg-gray-900
-                px-4
-                pr-9
-                py-3
-                text-white
-                focus:border-cyan-600
+                border border-gray-600
+                p-2.5
+                text-sm text-white
+              placeholder-gray-400
                 outline-none
+                transition
+                focus:border-blue-500
+                focus:ring-1
+              focus:ring-blue-500
+                appearance-none
+                
               "
             >
               <option value="onsite">Presencial</option>
@@ -208,9 +231,9 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
         {/* Classroom */
           isClassOnsite && (
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300">
+              <label className="mb-2 text-sm font-medium text-white">
                 Aula{" "}
-                <span className="font-normal text-gray-500">
+                <span className="font-normal text-gray-400">
                   (opcional)
                 </span>
               </label>
@@ -222,28 +245,28 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
                 value={classData.classroom}
                 onChange={(e) => onChange("classroom", e.target.value)}
                 className="
+                  block 
+                bg-gray-700
+                  w-full
                   rounded-lg
-                  border
-                  border-gray-700
-                  bg-gray-900
-                  px-4
-                  py-3
-                  text-white
-                  placeholder:text-gray-500
+                  border border-gray-600
+                  p-2.5
+                  text-sm text-white
+                placeholder-gray-400
                   outline-none
-                  focus:border-cyan-600
+                  transition
+                  focus:border-blue-500
+                  focus:ring-1
+                focus:ring-blue-500
                 "
               />
             </div>
           )
         }
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
 
         {/* Start time */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">
+          <label className="mb-2 text-sm font-medium text-white">
             Hora de inicio
           </label>
 
@@ -253,22 +276,26 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
             max={classData.endTime || undefined}
             onChange={(e) => onChange("startTime", e.target.value)}
             className="
+              block 
+            bg-gray-700
+              w-full
               rounded-lg
-              border
-              border-gray-700
-              bg-gray-900
-              px-4
-              py-3
-              text-white
+              border border-gray-600
+              p-2.5
+              text-sm text-white
+            placeholder-gray-400
               outline-none
-              focus:border-cyan-600
+              transition
+              focus:border-primary-500
+              focus:ring-2
+            focus:ring-blue-500
             "
           />
         </div>
 
         {/* End time */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-300">
+          <label className="mb-2 text-sm font-medium text-white">
             Hora de término
           </label>
 
@@ -278,105 +305,130 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
             min={classData.startTime || undefined}
             onChange={(e) => onChange("endTime", e.target.value)}
             className="
+              block 
+            bg-gray-700
+              w-full
               rounded-lg
-              border
-              border-gray-700
-              bg-gray-900
-              px-4
-              py-3
-              text-white
+              border border-gray-600
+              p-2.5
+              text-sm text-white
+            placeholder-gray-400
               outline-none
-              focus:border-cyan-600
+              transition
+              focus:border-primary-500
+              focus:ring-2
+            focus:ring-blue-500
             "
           />
         </div>
+
+        
+
       </div>
 
       { // Accordeon with schedule conflicts
         isRecalculatingConflicts ? (
-          <div className="mt-4 overflow-hidden rounded-lg border border-gray-600">
+          <div className="overflow-hidden rounded-lg border border-[#441306] mt-4">
             <div
               className="
                 flex w-full items-center gap-2
                 px-4 py-3
-                text-sm font-medium text-gray-300
-                bg-gray-700
+                text-sm font-medium text-[#ffb769]
+                bg-[#441306]
               "
             >
-              <div className="loader" />
+              <div className="yellow-loader" />
               Recalculando conflictos...
             </div>
           </div>
         ) : (
           conflictCount > 0 && (
-            <div className="mt-4 overflow-hidden rounded-lg border border-yellow-600">
+            <div className="overflow-hidden rounded-lg border border-[#441306] mt-4">
               <button
                 type="button"
                 onClick={() => setShowConflicts((prev) => !prev)}
                 className="
-                  flex w-full items-center justify-between
-                  px-4 py-3
-                  text-sm font-medium text-white
-                  bg-yellow-600
-                  transition-colors
+                  flex
+                  w-full
+                  items-center
+                  justify-between
+                  bg-[#441306]
+                  px-4
+                  py-3
+                  text-sm
+                  font-medium
+                  text-[#ffb769]
                   cursor-pointer
                 "
               >
                 <span className="inline-flex items-center gap-2">
-                  <TriangleAlert size={20}/> {conflictCount}{" "}
-                  {conflictCount === 1 ? "conflicto" : "conflictos"} de horario
+                  <TriangleAlert size={18} />
+
+                  {conflictCount}{" "}
+                  {conflictCount === 1
+                    ? "conflicto de horario"
+                    : "conflictos de horario"}
                 </span>
 
                 <ChevronDown
-                  size={20}
-                  className={`transition-transform duration-200 ${
-                    showConflicts ? "rotate-180" : ""
-                  }`}
+                  size={18}
+                  className={`
+                    transition-transform
+                    duration-200
+                    ${showConflicts ? "rotate-180" : ""}
+                  `}
                 />
               </button>
 
               {showConflicts && (
-                <div className=" px-4 py-3">
-                  <div className="flex flex-col gap-3">
+                <div className="border-t border-yellow-800/70 bg-gray-900/40 px-4 py-4">
+                  <div className="flex flex-col gap-4">
                     {externalConflicts.map((conflict, index) => (
-                      <div key={`external-${index}`} className="text-sm">
-                        <p className="font-medium text-gray-200">
+                      <div
+                        key={`external-${index}`}
+                        className="border-l-2 border-[#ffb769] pl-3"
+                      >
+                        <p className="text-sm font-medium text-gray-200">
                           {conflict.subject}
                         </p>
 
-                        <p className="text-gray-400">
-                          {getDaysLabel(conflict.conflictDays)+" "}
-                          {`de ${formatTime(conflict.startTime)} a ${formatTime(conflict.endTime)}`}
+                        <p className="mt-1 text-sm text-gray-400">
+                          {getDaysLabel(conflict.conflictDays)}{" "}
+                          de {formatTime(conflict.startTime)} a{" "}
+                          {formatTime(conflict.endTime)}
                         </p>
                       </div>
                     ))}
 
                     {internalConflicts.map((conflict, index) => {
                       const isClassA = conflict.classA === classData.tempId;
-                      return(
-                        <div key={`internal-${index}`} className="text-sm">
-                          <p className="font-medium text-gray-200">
+
+                      return (
+                        <div
+                          key={`internal-${index}`}
+                          className="border-l-2 border-[#ffb769] pl-3"
+                        >
+                          <p className="text-sm font-medium text-gray-200">
                             Otra clase de esta materia
                           </p>
 
-                          <p className="text-gray-400">
-                            {getDaysLabel(conflict.conflictDays)+" "}
-                            {`de ${
-                              formatTime(
-                                isClassA
-                                  ? conflict.classBStartTime
-                                  : conflict.classAStartTime
-                              )
-                            } a ${
-                              formatTime(
-                                isClassA
-                                  ? conflict.classBEndTime
-                                  : conflict.classAEndTime
-                              )
-                            }`}
+                          <p className="mt-1 text-sm text-gray-400">
+                            {getDaysLabel(conflict.conflictDays)}{" "}
+                            de{" "}
+                            {formatTime(
+                              isClassA
+                                ? conflict.classBStartTime
+                                : conflict.classAStartTime
+                            )}{" "}
+                            a{" "}
+                            {formatTime(
+                              isClassA
+                                ? conflict.classBEndTime
+                                : conflict.classAEndTime
+                            )}
                           </p>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </div>
@@ -384,7 +436,7 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
             </div>
           )
         )
-      }
+      } 
     </div>
   );
 };
