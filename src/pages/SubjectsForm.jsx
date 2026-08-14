@@ -10,6 +10,7 @@ import { apiFetch } from "@/services/apiFetch";
 import ColorPicker from "@/components/ColorPicker";
 import SectionLoader from "@/components/SectionLoader";
 import { areSameDay } from "@/utils/date.utils.js";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function SubjectsForm() {
   
@@ -48,6 +49,8 @@ export default function SubjectsForm() {
   const [isRecalculatingConflicts, setIsRecalculatingConflicts] = useState(false);
   const conflictCalculationId = useRef(0)
 
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
   console.log("Estos son los cruces con otra materias: ", externalConflicts);
   console.log("Estos son los cruces con esta materia: ", internalConflicts);
 
@@ -56,6 +59,11 @@ export default function SubjectsForm() {
   const [addingClassIds, setAddingClassIds] = useState([]); // Set class to animate entrance
 
   const classesEndRef = useRef(null);
+
+  // Function to close modal
+  const handleCloseConfirmModal = () => {
+    setIsConfirmModalOpen(false);
+  };
 
   // Set the document title
   useEffect(() => {
@@ -179,6 +187,7 @@ export default function SubjectsForm() {
     !subject.startDate ||
     !subject.endDate||
     isSending ||
+    isRecalculatingConflicts ||
     !areClassesValid;
 
   function addClass() {
@@ -543,22 +552,11 @@ export default function SubjectsForm() {
     }));
   };
 
-  // handleSubmit actualizado
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!selectedPeriod) {
-      notify("error", "No hay un periodo seleccionado");
-      return;
-    }
-
-    // Preparar datos con eliminación
+  // Connection to endpoint that saves subject
+  const saveSubject = async () => {
     const cleanSubjectData = isEditMode
       ? prepareUpdateData()
       : prepareCreateData();
-
-    setIsSending(true);
-    setServerError("");
 
     try {
       let url, method;
@@ -572,7 +570,7 @@ export default function SubjectsForm() {
       }
 
       const res = await apiFetch(url, {
-        method: method,
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -586,11 +584,13 @@ export default function SubjectsForm() {
         return;
       }
 
-      notify("success", isEditMode 
-        ? "Materia actualizada correctamente" 
-        : "Materia creada correctamente"
+      notify(
+        "success",
+        isEditMode
+          ? "Materia actualizada correctamente"
+          : "Materia creada correctamente"
       );
-      
+
       navigate("/app/subjects");
 
     } catch (err) {
@@ -599,6 +599,30 @@ export default function SubjectsForm() {
     } finally {
       setIsSending(false);
     }
+  };
+
+  // Submit form
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!selectedPeriod) {
+      notify("error", "No hay un periodo seleccionado");
+      return;
+    }
+
+    setServerError("");
+
+    const hasConflicts =
+      externalConflicts.length > 0 ||
+      internalConflicts.length > 0;
+
+    if (hasConflicts) {
+      setIsConfirmModalOpen(true);
+      return;
+    }
+
+    setIsSending(true);
+    await saveSubject();
   };
 
   if (isLoadingPeriod) {
@@ -981,12 +1005,18 @@ export default function SubjectsForm() {
                       disabled:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50
                     "
                   >
-                    {isSending
-                      ? <div className="loader"></div>
-                      : isEditMode
-                        ? "Guardar cambios"
-                        : "Crear materia"
-                    }
+                    {isSending ? (
+                      <div className="loader"></div>
+                    ) : isRecalculatingConflicts ? (
+                      <div className="flex items-center gap-2">
+                        <div className="loader"></div>
+                        Comprobando...
+                      </div>
+                    ) : isEditMode ? (
+                      "Guardar cambios"
+                    ) : (
+                      "Crear materia"
+                    )}
                   </button>
                 </div>
               </form>
@@ -995,6 +1025,19 @@ export default function SubjectsForm() {
           
         </div>
       
+        {isConfirmModalOpen && (
+          <ConfirmModal
+            title="Clases en conflicto"
+            message="Esta materia tiene clases que chocan con otras clases. ¿Seguro que deseas guardar?"
+            variant="warning"
+            onClose={() => setIsConfirmModalOpen(false)}
+            onConfirm={async () => {
+              setIsConfirmModalOpen(false);
+              setIsSending(true);
+              await saveSubject();
+            }}
+          />
+        )}
     </div>  
   )
 }
