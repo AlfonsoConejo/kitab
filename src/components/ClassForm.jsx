@@ -10,6 +10,11 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
   
   const isClassOnsite = classData.mode === "onsite";
 
+  const hasSchedule =
+    classData.days?.length > 0 &&
+    classData.startTime &&
+    classData.endTime;
+
    const daysMap = [
     { label: "Lun", value: 1 },
     { label: "Mar", value: 2 },
@@ -121,7 +126,7 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
 
                   ${
                     classData.days?.includes(day.value)
-                      ? "bg-cyan-600 text-white"
+                      ? "bg-blue-900 text-blue-300"
                       : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                   }
                 `}
@@ -326,117 +331,122 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
 
       </div>
 
-      { // Accordeon with schedule conflicts
-        isRecalculatingConflicts ? (
-          <div className="overflow-hidden rounded-lg border border-[#441306] mt-4">
-            <div
-              className="
-                flex w-full items-center gap-2
-                px-4 py-3
-                text-sm font-medium text-[#ffb769]
-                bg-[#441306]
-              "
-            >
-              <div className="yellow-loader" />
-              Calculando conflictos...
-            </div>
-          </div>
-        ) : (
-          conflictCount > 0 && (
+
+      {
+        hasSchedule && (
+          // Accordeon with schedule conflicts
+          isRecalculatingConflicts ? (
             <div className="overflow-hidden rounded-lg border border-[#441306] mt-4">
-              <button
-                type="button"
-                onClick={() => setShowConflicts((prev) => !prev)}
+              <div
                 className="
-                  flex
-                  w-full
-                  items-center
-                  justify-between
+                  flex w-full items-center gap-2
+                  px-4 py-3
+                  text-sm font-medium text-[#ffb769]
                   bg-[#441306]
-                  px-4
-                  py-3
-                  text-sm
-                  font-medium
-                  text-[#ffb769]
-                  cursor-pointer
                 "
               >
-                <span className="inline-flex items-center gap-2">
-                  <TriangleAlert size={18} />
+                <div className="yellow-loader" />
+                Calculando conflictos...
+              </div>
+            </div>
+          ) : (
+            conflictCount > 0 && (
+              <div className="overflow-hidden rounded-lg border border-[#441306] mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowConflicts((prev) => !prev)}
+                  className="
+                    flex
+                    w-full
+                    items-center
+                    justify-between
+                    bg-[#441306]
+                    px-4
+                    py-3
+                    text-sm
+                    font-medium
+                    text-[#ffb769]
+                    cursor-pointer
+                  "
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <TriangleAlert size={18} />
 
-                  {conflictCount}{" "}
-                  {conflictCount === 1
-                    ? "conflicto de horario"
-                    : "conflictos de horario"}
-                </span>
+                    {conflictCount}{" "}
+                    {conflictCount === 1
+                      ? "conflicto de horario"
+                      : "conflictos de horario"}
+                  </span>
 
-                <ChevronDown
-                  size={18}
-                  className={`
-                    transition-transform
-                    duration-200
-                    ${showConflicts ? "rotate-180" : ""}
-                  `}
-                />
-              </button>
+                  <ChevronDown
+                    size={18}
+                    className={`
+                      transition-transform
+                      duration-200
+                      ${showConflicts ? "rotate-180" : ""}
+                    `}
+                  />
+                </button>
 
-              {showConflicts && (
-                <div className="border-t border-yellow-800/70 bg-gray-900/40 px-4 py-4">
-                  <div className="flex flex-col gap-4">
-                    {externalConflicts.map((conflict, index) => (
-                      <div
-                        key={`external-${index}`}
-                        className="border-l-2 border-[#ffb769] pl-3"
-                      >
-                        <p className="text-sm font-medium text-gray-200">
-                          {conflict.subject}
-                        </p>
-
-                        <p className="mt-1 text-sm text-gray-400">
-                          {getDaysLabel(conflict.conflictDays)}{" "}
-                          de {formatTime(conflict.startTime)} a{" "}
-                          {formatTime(conflict.endTime)}
-                        </p>
-                      </div>
-                    ))}
-
-                    {internalConflicts.map((conflict, index) => {
-                      const isClassA = conflict.classA === classData.tempId;
-
-                      return (
+                {showConflicts && (
+                  <div className=" bg-gray-900 px-4 py-4">
+                    <div className="flex flex-col gap-4">
+                      {externalConflicts.map((conflict, index) => (
                         <div
-                          key={`internal-${index}`}
+                          key={`external-${index}`}
                           className="border-l-2 border-[#ffb769] pl-3"
                         >
                           <p className="text-sm font-medium text-gray-200">
-                            Otra clase de esta materia
+                            {conflict.subject}
                           </p>
 
                           <p className="mt-1 text-sm text-gray-400">
                             {getDaysLabel(conflict.conflictDays)}{" "}
-                            de{" "}
-                            {formatTime(
-                              isClassA
-                                ? conflict.classBStartTime
-                                : conflict.classAStartTime
-                            )}{" "}
-                            a{" "}
-                            {formatTime(
-                              isClassA
-                                ? conflict.classBEndTime
-                                : conflict.classAEndTime
-                            )}
+                            de {formatTime(conflict.startTime)} a{" "}
+                            {formatTime(conflict.endTime)}
                           </p>
                         </div>
-                      );
-                    })}
+                      ))}
+
+                      {internalConflicts.map((conflict, index) => {
+                        const isClassA = conflict.classA === classData.tempId;
+
+                        return (
+                          <div
+                            key={`internal-${index}`}
+                            className="border-l-2 border-[#ffb769] pl-3"
+                          >
+                            <p className="text-sm font-medium text-gray-200">
+                              Otra clase de esta materia
+                            </p>
+
+                            <p className="mt-1 text-sm text-gray-400">
+                              {getDaysLabel(conflict.conflictDays)}{" "}
+                              de{" "}
+                              {formatTime(
+                                isClassA
+                                  ? conflict.classBStartTime
+                                  : conflict.classAStartTime
+                              )}{" "}
+                              a{" "}
+                              {formatTime(
+                                isClassA
+                                  ? conflict.classBEndTime
+                                  : conflict.classAEndTime
+                              )}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )
           )
         )
-      } 
+      }
+        
     </div>
   );
 };
