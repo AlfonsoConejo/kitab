@@ -60,11 +60,6 @@ export default function SubjectsForm() {
 
   const classesEndRef = useRef(null);
 
-  // Function to close modal
-  const handleCloseConfirmModal = () => {
-    setIsConfirmModalOpen(false);
-  };
-
   // Set the document title
   useEffect(() => {
     document.title = isEditMode ? "Editar materia" : "Nueva materia";
@@ -83,7 +78,7 @@ export default function SubjectsForm() {
         const subjectData = await resSubject.json();
 
         if (!resSubject.ok) {
-          notify("error", "No se pudo obtener la materia");
+          notify("error", "No se pudo encontrar la materia");
           navigate("/app/subjects");
           return;
         }
@@ -154,7 +149,6 @@ export default function SubjectsForm() {
           notify(internalData.message);
           return;
         }
-
 
         setExternalConflicts(externalData.externalConflicts);
         setInternalConflicts(internalData.internalConflicts);

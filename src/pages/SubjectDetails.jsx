@@ -10,17 +10,17 @@ const typeMap = {
   theory: {
     label: "Teoría",
     icon: <Notebook size={18} />,
-    color: "bg-blue-500/20 text-blue-300"
+    color: "bg-[#162456] text-[#4589dd]"
   },
   laboratory: {
     label: "Laboratorio",
     icon: <FlaskConical size={18} />,
-    color: "bg-green-500/20 text-green-300"
+    color: "bg-[#002c22] text-[#59dead]"
   },
   workshop: {
     label: "Taller",
     icon: <Wrench size={18} />,
-    color: "bg-orange-500/20 text-orange-300"
+    color: "bg-[#441306] text-[#ffb86a]"
   }
 };
 
@@ -30,8 +30,11 @@ export default function SubjectDetails() {
   const [subject, setSubject] = useState(null);
   const [isLoadingSubject, setIsLoadingSubject] = useState(true);
   const navigate = useNavigate();
+
+  const [externalConflicts, setExternalConflicts] = useState([]);
+  const [internalConflicts, setInternalConflicts] = useState([]);
   
-  console.log("Información de la materia", subject);
+  console.log("Información de la materia: ", subject);
   
   // Fetch subject details with scheduled classes
   useEffect(() => {
@@ -40,26 +43,85 @@ export default function SubjectDetails() {
       try{
         setIsLoadingSubject(true);
 
-        const res = await apiFetch(`/api/subjects/${id}/with-classes`);
+        const resSubject = await apiFetch(`/api/subjects/${id}/with-classes`);
 
-        const data = await res.json();
+        const subjectData = await resSubject.json();
 
-        if (!res.ok) {
+        if (!resSubject.ok) {
           notify("error", "No se pudo encontrar la materia");
           navigate("/app/subjects");
           return;
         }
 
+        const classes = subjectData.data.classes.map((cls) => ({
+          id: cls.id,
+          days: cls.days,
+          type: cls.type,
+          mode: cls.mode,
+          classroom: cls.classroom ?? "",
+          startTime: cls.startTime,
+          endTime: cls.endTime,
+        }));
+
         setSubject({
-          id: data.data.id,
-          periodId: data.data.periodId,
-          name: data.data.name,
-          teacher: data.data.teacher,
-          color: data.data.color,
-          startDate: data.data.startDate,
-          endDate: data.data.endDate,
-          classes: data.data.classes
+          id: subjectData.data.id,
+          periodId: subjectData.data.periodId,
+          name: subjectData.data.name,
+          teacher: subjectData.data.teacher ?? "",
+          color: subjectData.data.color,
+          startDate: subjectData.data.startDate,
+          endDate: subjectData.data.endDate,
+          classes,
         });
+
+        const [externalRes, internalRes] = await Promise.all([
+          apiFetch(
+            `/api/subjects/classes/check-external-conflicts`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                periodId: subjectData.data.periodId,
+                subjectId: subjectData.data.id,
+                classes,
+              }),
+            }
+          ),
+
+          apiFetch(
+            `/api/subjects/classes/check-internal-conflicts`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                classes,
+              }),
+            }
+          ),
+        ]);
+
+        const [externalData, internalData] = await Promise.all([
+          externalRes.json(),
+          internalRes.json(),
+        ]);
+
+         if (!externalRes.ok) {
+          notify(externalData.message);
+          return;
+        }
+
+        if (!internalRes.ok) {
+          notify(internalData.message);
+          return;
+        }
+
+        setExternalConflicts(externalData.externalConflicts);
+        setInternalConflicts(internalData.internalConflicts);
+
       } catch (error) {
         notify("error", "Error de conexión");
         navigate("/app/subjects");
@@ -110,7 +172,7 @@ export default function SubjectDetails() {
       {/* Subject header cards */}
       <div className="">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="flex items-center gap-4 rounded-lg bg-gray-800 border border-gray-700 p-4">
+          <div className="flex items-center gap-4 p-4 sm:p-5 rounded-lg border-gray-700 bg-gray-800 shadow">
             <Paintbrush className="text-gray-400" size={22} />
             <div className="flex flex-col gap-1">
               <p className="text-xs uppercase tracking-wide text-gray-400">
@@ -123,7 +185,7 @@ export default function SubjectDetails() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 rounded-lg bg-gray-800 border border-gray-700 p-4">
+          <div className="flex items-center gap-4 p-4 sm:p-5 rounded-lg border-gray-700 bg-gray-800 shadow">
             <CalendarDays className="text-gray-400" size={22} />
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-400">
@@ -136,7 +198,7 @@ export default function SubjectDetails() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 rounded-lg bg-gray-800 border border-gray-700 p-4">
+          <div className="flex items-center gap-4 p-4 sm:p-5 rounded-lg border-gray-700 bg-gray-800 shadow">
             <User className="text-gray-400" size={22} />
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-400">
@@ -155,7 +217,7 @@ export default function SubjectDetails() {
         Clases
       </h2>
       {subject.classes.length === 0 ? (
-        <div className="flex items-center justify-center gap-4 rounded-lg bg-gray-800 border border-gray-700 p-4 text-center">
+        <div className="flex items-center justify-center gap-4 rounded-lg bg-gray-800 border-gray-700 p-4 text-center">
           <p className="text-gray-400">Sin clases. Edita la materia para agregar clases.</p>
         </div>
       ) : (
@@ -171,14 +233,14 @@ function ClassCard({ classData }) {
   const type = typeMap[classData.type];
 
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="rounded-lg border-gray-700 bg-gray-800 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       
       {/* Columna Izquierda: Tipo, Horario y Aula */}
       <div className="flex flex-col gap-3">
         
         {/* Type and mode labels */}
         <div className="flex items-center gap-3">
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${type.color}`}>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium ${type.color}`}>
             {type.icon}
             <span>{type.label}</span>
           </div>
@@ -202,14 +264,13 @@ function ClassCard({ classData }) {
             </span>
           </div>
 
-          {classData.mode === 'onsite' && (
+          {classData.mode === 'onsite' && classData.classroom && (
             <div className="flex items-center gap-1 text-xs font-semibold text-gray-300 bg-gray-700 px-2 py-0.5 rounded-md">
               <MapPin size={12} className="text-gray-300" />
               <span>{classData.classroom}</span>
             </div>
           )}
         </div>
-
       </div>
 
       {/* Columna Derecha: Días de la semana */}
