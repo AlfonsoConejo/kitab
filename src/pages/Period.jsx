@@ -193,9 +193,9 @@ export default function Period() {
   );
 }
 
-// ============================================================
-// COMPONENTE: Sección de periodos (tabla con estilo tarjeta)
-// ============================================================
+
+// Sección de periodos (tabla con estilo tarjeta)
+
 function PeriodSection({
   title,
   periods,

@@ -10,17 +10,17 @@ const typeMap = {
   theory: {
     label: "Teoría",
     icon: <Notebook size={18} />,
-    color: "bg-[#162456] text-[#4589dd]"
+    color: "bg-[#1d2748] text-[#7da2ff]"
   },
   laboratory: {
     label: "Laboratorio",
     icon: <FlaskConical size={18} />,
-    color: "bg-[#002c22] text-[#59dead]"
+    color: "bg-[#163b2b] text-[#6ee7a0]"
   },
   workshop: {
     label: "Taller",
     icon: <Wrench size={18} />,
-    color: "bg-[#441306] text-[#ffb86a]"
+    color: "bg-[#403510] text-[#f5d76e]"
   }
 };
 

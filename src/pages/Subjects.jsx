@@ -202,12 +202,12 @@ function SubjectCard({ subject, onDelete, onEdit }) {
   const classDays = getClassDays(subject.classes);
   
   return (
-    <div className="group rounded-xl border border-gray-700 bg-gray-800/50 hover:bg-gray-800 transition-all duration-200 p-6">
+    <div className="group rounded-xl border border-transparent bg-gray-800 hover:border-gray-700 transition-all duration-200 p-6">
       {/* Header with name and color */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div
-            className="h-5 w-5 rounded-full shrink-0"
+            className="h-5 w-1 shrink-0"
             style={{ backgroundColor: subject.color }}
           />
           <h3 className="text-lg font-semibold text-white truncate">
