@@ -60,8 +60,6 @@ https://kitab-six.vercel.app
 
 ## Features
 
-### Features
-
 ### Implemented
 
 - **Authentication system**<br>
