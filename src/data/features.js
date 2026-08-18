@@ -15,7 +15,7 @@ const features = [
       id: 3,
       title: 'Asignación de materias',
       description: 'Organiza materias por periodo activo.',
-      status: 'developing'
+      status: 'implemented'
     },
     {
       id: 4,
