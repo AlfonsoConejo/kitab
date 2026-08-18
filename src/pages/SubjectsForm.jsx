@@ -49,10 +49,7 @@ export default function SubjectsForm() {
   const [isRecalculatingConflicts, setIsRecalculatingConflicts] = useState(false);
   const conflictCalculationId = useRef(0)
 
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-
-  console.log("Estos son los cruces con otra materias: ", externalConflicts);
-  console.log("Estos son los cruces con esta materia: ", internalConflicts);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);;
 
   const [deletedClassIds, setDeletedClassIds] = useState([]); // Mark to delete
   const [deletingClassIds, setDeletingClassIds] = useState([]); // // Mark to animate deletion
@@ -330,7 +327,7 @@ export default function SubjectsForm() {
 
     if (!hasCompleteSchedule) {
       setExternalConflicts((prev) =>
-        prev.filter((conflict) => conflict.tempId !== tempId)
+        prev.filter((conflict) => conflict.id !== tempId)
       );
 
       setInternalConflicts((prev) =>
@@ -359,7 +356,6 @@ export default function SubjectsForm() {
   };
 
   const recalculateExternalConflicts = async (updatedClass, calculationId) => {
-    console.log("Recalculando cruces externos");
     try {
       const res = await apiFetch(
         `/api/subjects/classes/check-external-conflicts`,
@@ -390,7 +386,7 @@ export default function SubjectsForm() {
       // Reemplazar únicamente los conflictos de esta clase
       setExternalConflicts((prev) => {
         const filtered = prev.filter(
-          (conflict) => conflict.tempId !== updatedClass.tempId
+          (conflict) => conflict.id !== updatedClass.tempId
         );
 
         return [...filtered, ...data.externalConflicts];
@@ -403,7 +399,6 @@ export default function SubjectsForm() {
   };
 
   const recalculateInternalConflicts = async (updatedClasses, calculationId) => {
-    console.log("Recalculando cruces internos");
     try {
       const res = await apiFetch(
         `/api/subjects/classes/check-internal-conflicts`,
@@ -452,7 +447,7 @@ export default function SubjectsForm() {
 
     // Eliminar inmediatamente sus conflictos
     setExternalConflicts((prev) =>
-      prev.filter((conflict) => conflict.tempId !== tempId)
+      prev.filter((conflict) => conflict.id !== tempId)
     );
 
     setInternalConflicts((prev) =>
@@ -660,7 +655,7 @@ export default function SubjectsForm() {
               {/* Section header */}
               <div className="flex items-center pb-4 mb-4 rounded-t gap-4 border-b sm:mb-5 border-gray-600">
                 <div>
-                  <h3 class="text-lg font-semibold text-white">
+                  <h3 className="text-lg font-semibold text-white">
                       Información de la materia
                   </h3>
 
@@ -921,7 +916,7 @@ export default function SubjectsForm() {
                     const classExternalConflicts =
                       externalConflicts.filter(
                         (conflict) =>
-                          conflict.tempId === classItem.tempId
+                          conflict.id === classItem.tempId
                       );
 
                     const classInternalConflicts =

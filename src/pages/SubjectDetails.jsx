@@ -2,9 +2,11 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { apiFetch } from "../services/apiFetch.js";
 import { notify } from "@/utils.jsx";
-import { User, CalendarDays, Clock3, MapPin, Laptop, Building2, FlaskConical, Wrench, Notebook, Paintbrush} from "lucide-react"
+import { User, CalendarDays, Clock3, MapPin, Laptop, Building2, FlaskConical, Wrench, Notebook, Paintbrush, ChevronDown} from "lucide-react"
 import { DAY_NAMES, formatDate, formatTime } from "@/functions.js";
 import SectionLoader from "@/components/SectionLoader.jsx";
+import ExternalConflicts from "@/components/ExternalConflicts.jsx";
+import InternalConflicts from "@/components/InternalConflicts.jsx";
 
 const typeMap = {
   theory: {
@@ -33,8 +35,6 @@ export default function SubjectDetails() {
 
   const [externalConflicts, setExternalConflicts] = useState([]);
   const [internalConflicts, setInternalConflicts] = useState([]);
-  
-  console.log("Información de la materia: ", subject);
   
   // Fetch subject details with scheduled classes
   useEffect(() => {
@@ -221,72 +221,172 @@ export default function SubjectDetails() {
           <p className="text-gray-400">Sin clases. Edita la materia para agregar clases.</p>
         </div>
       ) : (
-        subject.classes.map((classItem) => (
-          <ClassCard key={classItem.id} classData={{...classItem}} />
-        ))
+        subject.classes.map((classItem) => {
+
+          console.log(classItem);
+
+          const classExternalConflicts =
+            externalConflicts.filter(
+              (conflict) =>
+                conflict.id === classItem.id
+            );
+
+            const classInternalConflicts =
+              internalConflicts.filter(
+                (conflict) =>
+                  conflict.classA === classItem.id ||
+                  conflict.classB === classItem.id
+            );
+
+            const conflictCount =
+              classExternalConflicts.length +
+              classInternalConflicts.length;
+
+          return(
+            <ClassCard 
+              key={classItem.id}
+              classData={{...classItem}} 
+              conflicts={{
+                externalConflicts:
+                  classExternalConflicts,
+                internalConflicts:
+                  classInternalConflicts,
+              }}
+              conflictCount={conflictCount}/>
+          )
+          
+        })
       )}
     </div>    
   );
 }
 
-function ClassCard({ classData }) {
+function ClassCard({ classData, conflicts, conflictCount }) {
+  
+  const { externalConflicts, internalConflicts } = conflicts;
+
+  const [showConflicts, setShowConflicts] = useState(false);
+
+  console.log({
+    classId: classData.id,
+    external: externalConflicts.length,
+    internal: internalConflicts.length,
+    total: conflictCount,
+  });
+
   const type = typeMap[classData.type];
 
   return (
-    <div className="rounded-lg border-gray-700 bg-gray-800 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      
-      {/* Columna Izquierda: Tipo, Horario y Aula */}
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4 rounded-lg border-gray-700 bg-gray-800 p-4">
+      { /* Tarjeta de información de clase */}
+      <div className=" flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* Columna Izquierda: Tipo, Horario y Aula */}
+        <div className="flex flex-col gap-3">
         
-        {/* Type and mode labels */}
-        <div className="flex items-center gap-3">
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium ${type.color}`}>
-            {type.icon}
-            <span>{type.label}</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
-            {classData.mode === "online" ? <Laptop size={14} /> : <Building2 size={14} />}
-            <span>{classData.mode === "online" ? "En línea" : "Presencial"}</span>
-          </div>
-        </div>
-
-        {/* Time and classroom */}
-        <div className="flex items-baseline gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-white">
-            <Clock3 className="text-gray-400" size={16} />
-            <span className="text-lg font-semibold tracking-tight">
-              {formatTime(classData.startTime)}
-            </span>
-            <span className="text-gray-600">—</span>
-            <span className="text-lg font-semibold tracking-tight">
-              {formatTime(classData.endTime)}
-            </span>
-          </div>
-
-          {classData.mode === 'onsite' && classData.classroom && (
-            <div className="flex items-center gap-1 text-xs font-semibold text-gray-300 bg-gray-700 px-2 py-0.5 rounded-md">
-              <MapPin size={12} className="text-gray-300" />
-              <span>{classData.classroom}</span>
+          {/* Type and mode labels */}
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium ${type.color}`}>
+              {type.icon}
+              <span>{type.label}</span>
             </div>
-          )}
+
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              {classData.mode === "online" ? <Laptop size={14} /> : <Building2 size={14} />}
+              <span>{classData.mode === "online" ? "En línea" : "Presencial"}</span>
+            </div>
+          </div>
+
+          {/* Time and classroom */}
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-white">
+              <Clock3 className="text-gray-400" size={16} />
+              <span className="text-lg font-semibold tracking-tight">
+                {formatTime(classData.startTime)}
+              </span>
+              <span className="text-gray-600">—</span>
+              <span className="text-lg font-semibold tracking-tight">
+                {formatTime(classData.endTime)}
+              </span>
+            </div>
+
+            {classData.mode === 'onsite' && classData.classroom && (
+              <div className="flex items-center gap-1 text-xs font-semibold text-gray-300 bg-gray-700 px-2 py-0.5 rounded-md">
+                <MapPin size={12} className="text-gray-300" />
+                <span>{classData.classroom}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Columna Derecha: Días de la semana */}
+        <div className="flex flex-col md:items-end gap-1.5 border-t border-gray-800/50 pt-3 md:border-none md:pt-0">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 md:pl-0">Días</span>
+          <div className="flex gap-1">
+            {classData.days.map(day => (
+              <span
+                key={day}
+                className="rounded-md px-2 py-0.5 text-xs font-semibold bg-gray-700 text-gray-300"
+              >
+                {DAY_NAMES[day]}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Columna Derecha: Días de la semana */}
-      <div className="flex flex-col md:items-end gap-1.5 border-t border-gray-800/50 pt-3 md:border-none md:pt-0">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 md:pl-0">Días</span>
-        <div className="flex gap-1">
-          {classData.days.map(day => (
-            <span
-              key={day}
-              className="rounded-md px-2 py-0.5 text-xs font-semibold bg-gray-700 text-gray-300"
-            >
-              {DAY_NAMES[day]}
-            </span>
-          ))}
-        </div>
-      </div>
+      {
+        conflictCount > 0 && (
+          <div className="overflow-hidden">
+            <button
+                type="button"
+                onClick={() => setShowConflicts((prev) => !prev)}
+                className="
+                  flex
+                  items-center
+                  justify-between
+                  text-sm
+                  font-light
+                  text-[#f9d404]
+                  gap-3
+                  cursor-pointer
+                "
+                >
+                  <span className="inline-flex items-center gap-2">
+
+                    {conflictCount}{" "}
+                    {conflictCount === 1
+                      ? "conflicto de horario"
+                      : "conflictos de horario"}
+                  </span>
+
+                  <ChevronDown
+                    size={18}
+                    className={`
+                      transition-transform
+                      duration-200
+                      translate-y-[2px]
+                      ${showConflicts ? "rotate-180" : ""}
+                    `}
+                  />
+              </button>
+
+              {showConflicts && (
+                  <div className="pr-4 pt-4">
+                    <div className="flex flex-col gap-4">
+                      <ExternalConflicts 
+                        conflicts={externalConflicts} 
+                        variant="yellow"/>
+                      <InternalConflicts 
+                        conflicts={internalConflicts} 
+                        classId={classData.id} 
+                        variant="yellow"/>
+                    </div>
+                  </div>
+                )
+              }
+          </div>
+        )
+      }
 
     </div>
   );

@@ -1,6 +1,8 @@
 import { X, ChevronDown, TriangleAlert } from "lucide-react";
 import { formatTime, getDaysLabel } from "@/functions";
 import { useState } from "react";
+import ExternalConflicts from "./ExternalConflicts";
+import InternalConflicts from "./InternalConflicts";
 
 const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isRecalculatingConflicts, onChange, onDelete }) => {
 
@@ -391,53 +393,13 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
                 {showConflicts && (
                   <div className=" bg-gray-900 px-4 py-4">
                     <div className="flex flex-col gap-4">
-                      {externalConflicts.map((conflict, index) => (
-                        <div
-                          key={`external-${index}`}
-                          className="border-l-2 border-[#ffb769] pl-3"
-                        >
-                          <p className="text-sm font-medium text-gray-200">
-                            {conflict.subject}
-                          </p>
-
-                          <p className="mt-1 text-sm text-gray-400">
-                            {getDaysLabel(conflict.conflictDays)}{" "}
-                            de {formatTime(conflict.startTime)} a{" "}
-                            {formatTime(conflict.endTime)}
-                          </p>
-                        </div>
-                      ))}
-
-                      {internalConflicts.map((conflict, index) => {
-                        const isClassA = conflict.classA === classData.tempId;
-
-                        return (
-                          <div
-                            key={`internal-${index}`}
-                            className="border-l-2 border-[#ffb769] pl-3"
-                          >
-                            <p className="text-sm font-medium text-gray-200">
-                              Otra clase de esta materia
-                            </p>
-
-                            <p className="mt-1 text-sm text-gray-400">
-                              {getDaysLabel(conflict.conflictDays)}{" "}
-                              de{" "}
-                              {formatTime(
-                                isClassA
-                                  ? conflict.classBStartTime
-                                  : conflict.classAStartTime
-                              )}{" "}
-                              a{" "}
-                              {formatTime(
-                                isClassA
-                                  ? conflict.classBEndTime
-                                  : conflict.classAEndTime
-                              )}
-                            </p>
-                          </div>
-                        );
-                      })}
+                      <ExternalConflicts 
+                        conflicts={externalConflicts} 
+                        variant="cream"/>
+                      <InternalConflicts 
+                        conflicts={internalConflicts} 
+                        classId={classData.tempId} 
+                        variant="cream"/>
                     </div>
                   </div>
                 )}
