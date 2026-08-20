@@ -10,7 +10,7 @@ https://kitab-six.vercel.app
 
 ## Tech Stack
 
-- **Frontend:** React, Context API.
+- **Frontend:** React, Context API, Tailwind CSS.
 - **Backend:** Node.js, Express.js (REST architecture).
 - **Database:** PostgreSQL (Hosted on Neon DB).
 - **Security:** JWT, Bcrypt.
@@ -31,26 +31,55 @@ https://kitab-six.vercel.app
 
 ## Screenshots
 
-| Landing Page | Periods Page |
-|--------------|--------------|
-| ![Landing](https://github.com/user-attachments/assets/dd219f24-3633-47e4-b967-0fd517f97f93) | ![Periods](https://github.com/user-attachments/assets/e3e5bd33-9802-4368-8849-ed6ecc9ea51f) |
+<table>
+  <tr>
+    <th>Landing Page</th>
+    <th>Periods Page</th>
+  </tr>
+  <tr>
+    <td>
+      <img src="https://github.com/user-attachments/assets/dd219f24-3633-47e4-b967-0fd517f97f93" alt="Landing">
+    </td>
+    <td>
+      <img src="https://github.com/user-attachments/assets/2eff9252-dd67-4479-9b13-2333e441d592" alt="Periods">
+    </td>
+  </tr>
+  <tr>
+    <th>Subjects Page</th>
+    <th>Subject View</th>
+  </tr>
+  <tr>
+    <td>
+      <img src="https://github.com/user-attachments/assets/ec33362f-a4b0-4f8a-8ea1-291e8337a0b4" alt="Subjects">
+    </td>
+    <td>
+      <img src="https://github.com/user-attachments/assets/9bde0f2a-19d9-4434-b8ab-aa702186dc22" alt="Subject View">
+    </td>
+  </tr>
+</table>
 
 ## Features
 
 ### Implemented
 
-- **Authentication system**  
+- **Authentication system**<br>
   Secure login and session management using JWT.
-- **Academic period management (CRUD)**  
+
+- **Academic period management (CRUD)**<br>
   Create, read, update, and delete academic periods with secure user-based access control.
+
+- **Subject and class management (CRUD)**<br>
+  Create, read, update, and delete subjects and their associated classes through a nested form.
+
+- **Schedule conflict detection**<br>
+  Automatic detection of scheduling conflicts between classes, including conflicts across different subjects.
 
 ### In development
 
-- Subject assignment per academic period
-- Task tracking system per course
+- Vacation and leave management system
+- Task tracking system per subjects
 - Daily dashboard overview
 - Interactive class calendar
-- Vacation and leave management system
 - Multi-device session control
 
 ## Getting Started
