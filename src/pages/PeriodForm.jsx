@@ -174,15 +174,11 @@ export default function PeriodForm() {
         ) : (
           <div className="max-w-2xl rounded-lg border border-gray-800 bg-gray-800 p-8">
             {/* Header*/}
-            <div className="flex items-center gap-3 mb-8">
-              <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-cyan-900/40">
-                <CalendarDays size={24} />
-              </div>
-
+            <div className="flex items-center pb-4 mb-4 rounded-t gap-4 border-b sm:mb-5 border-gray-600">
               <div>
-                <h2 className="text-xl font-semibold text-white">
+                <h3 className="text-lg font-semibold text-white">
                   Información del periodo
-                </h2>
+                </h3>
 
                 <p className="text-sm text-gray-400">
                   Completa los datos básicos del periodo académico.
@@ -194,10 +190,7 @@ export default function PeriodForm() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-6" autoComplete="off">
               {/* Name */}
               <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="name"
-                  className="text-sm font-medium text-gray-300"
-                >
+                <label htmlFor="name" className="mb-2 text-sm font-medium text-white">
                   Nombre del periodo
                 </label>
 
@@ -210,16 +203,19 @@ export default function PeriodForm() {
                   maxLength={30}
                   value={formData.name}
                   className="
+                    block
+                    bg-gray-700
+                    w-full
                     rounded-lg
-                    border
-                    border-gray-700
-                    bg-gray-900
-                    px-4
-                    py-3
-                    text-white
-                    placeholder:text-gray-500
+                    border border-gray-600                   
+                    p-2.5
+                    text-sm text-white
+                    placeholder-gray-400
                     outline-none
-                    focus:border-cyan-600
+                    transition
+                    focus:border-primary-500
+                    focus:ring-2
+                    focus:ring-blue-500
                   "
                 />
               </div>
@@ -227,10 +223,7 @@ export default function PeriodForm() {
               {/* Dates */}
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="startDate"
-                    className="text-sm font-medium text-gray-300"
-                  >
+                  <label htmlFor="startDate" className="mb-2 text-sm font-medium text-white">
                     Fecha de inicio
                   </label>
 
@@ -242,24 +235,26 @@ export default function PeriodForm() {
                     value={formData.startDate}
                     max={formData.endDate || undefined}
                     className="
+                      block w-full
+                      bg-gray-700
                       rounded-lg
-                      border
-                      border-gray-700
-                      bg-gray-900
-                      px-4
-                      py-3
-                      text-white
+                      border border-gray-600                     
+                      p-2.5
+                      text-sm text-white
                       outline-none
-                      focus:border-cyan-600
+                      placeholder-gray-400  
+                      transition
+                      focus:border-primary-500
+                      focus:ring-2
+                      focus:ring-blue-500
+                      disabled:cursor-not-allowed
+                      disabled:opacity-50
                     "
                   />
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="endDate"
-                    className="text-sm font-medium text-gray-300"
-                  >
+                  <label htmlFor="endDate" className="mb-2 text-sm font-medium text-white">
                     Fecha de finalización
                   </label>
 
@@ -272,18 +267,20 @@ export default function PeriodForm() {
                     value={formData.endDate}
                     min={formData.startDate}
                     className="
+                      block w-full
+                      bg-gray-700
                       rounded-lg
-                      border
-                      border-gray-700
-                      bg-gray-900
-                      px-4
-                      py-3
-                      text-white
+                      border border-gray-600 
+                      p-2.5
+                      text-sm text-white
                       outline-none
-                      focus:border-cyan-600
-
-                      disabled:opacity-50
+                      placeholder-gray-400
+                      transition   
+                      focus:border-primary-500
+                      focus:ring-2
+                      focus:ring-blue-500
                       disabled:cursor-not-allowed
+                      disabled:opacity-50
                     "
                   />
                 </div>
@@ -293,23 +290,6 @@ export default function PeriodForm() {
                 value={formData.color}
                 onChange={handleColorChange}
               />
-
-              {/* Recommendations */}
-              <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-4">
-                <h3 className="font-medium text-white">
-                  Recomendaciones
-                </h3>
-
-                <ul className="mt-2 space-y-1 text-sm text-gray-400">
-                  <li>
-                    • Utiliza nombres fáciles de identificar.
-                  </li>
-
-                  <li>
-                    • Podrás editar el periodo posteriormente.
-                  </li>
-                </ul>
-              </div>
 
               {serverError && (
                 <div className="bg-red-500/10 border border-red-500 text-red-400 p-2 rounded text-sm">
