@@ -1,6 +1,13 @@
 import FeatureBadge from "./FeatureBadge"
+import type { FeatureStatus } from "@/types/feature";
 
-export default function FeatureCard({ title, description, status }) {
+type FeatureCardProps = {
+  title: string;
+  description: string;
+  status: FeatureStatus;
+};
+
+export default function FeatureCard({ title, description, status }: FeatureCardProps) {
   return(
     <div className="rounded-2xl p-6 shadow-md border border-slate-900 bg-slate-800">
       <FeatureBadge status={status} />

@@ -1,9 +1,4 @@
-interface Feature {
-  id: number;
-  title: string;
-  description: string;
-  status: 'implemented' | 'developing' | 'upcoming';
-}
+import type { Feature } from "@/types/feature";
 
 const features: Feature[] = [
     {
