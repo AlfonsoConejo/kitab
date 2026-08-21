@@ -1,4 +1,13 @@
-const allSprints = [
+interface Sprint {
+  version: string;
+  date: string;
+  description: string;
+  duration: string;
+  videoUrl: string,
+  type: string;
+}
+
+const allSprints: Sprint[] = [
   {
     version: "v0.1",
     date: "28 jun 2026",

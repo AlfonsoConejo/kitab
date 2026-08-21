@@ -1,4 +1,11 @@
-const features = [
+interface Feature {
+  id: number;
+  title: string;
+  description: string;
+  status: 'implemented' | 'developing' | 'upcoming';
+}
+
+const features: Feature[] = [
     {
       id: 1,
       title: 'Autenticación con JWT',
