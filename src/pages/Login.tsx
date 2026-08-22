@@ -13,11 +13,17 @@ export default function LoginForm() {
   const { setUser } = useAuth();
   const API_URL = import.meta.env.VITE_API_URL;
 
+  interface LoginFormData {
+    email: string;
+    password: string;
+  }
+  type FormField = keyof LoginFormData;
+
   // States
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: ''});
+  const [formData, setFormData] = useState<LoginFormData>({ email: '', password: ''});
   const [isSending, setIsSending] = useState(false);
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<LoginFormData>({
     email: "",
     password: ""
   });
@@ -31,7 +37,7 @@ export default function LoginForm() {
   isSending;
 
   //Validate empty fields
-  const validateField = (name, value) => {
+  const validateField = (name: FormField, value: string) => {
     const trimmed = value.trim();
 
     switch (name) {
@@ -51,23 +57,25 @@ export default function LoginForm() {
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    const field = name as FormField;
 
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
 
-    const error = validateField(name, value);
+    const error = validateField(field, value);
 
     setErrors(prev => ({
       ...prev,
-      [name]: error
+      [field]: error
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Revalidate fields one last time before sending
@@ -136,7 +144,6 @@ export default function LoginForm() {
   useEffect(() => {
     document.title = "Inicio de sesión";
   }, []);
-
 
   return (
     <div className="min-h-dvh w-full bg-gray-900 flex items-center justify-center px-4 py-4">

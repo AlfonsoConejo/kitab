@@ -3,38 +3,19 @@ import { NavLink, Link } from "react-router-dom";
 import demo_periodos from "../assets/demo_periodos.png"
 import { ChevronDown, ChevronRight, Play } from "lucide-react";
 import allSprints from '../data/sprints';
+import faqs from "@/data/faqs";
 
 export default function Inicio() {
 
-  const [openIndex, setOpenIndex] = useState(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const toggleFAQ = (index) => {
+  const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
   useEffect(() => {
     document.title = "Inicio - Kitab";
   }, []);
-
-  // Questions
-  const faqs = [
-    {
-      question: "¿Kitab es realmente gratuito?",
-      answer: "Sí. Kitab sigue una filosofía de código abierto (Open Source). Está siendo desarrollado activamente como parte de mi portafolio profesional y puedes probarlo sin costo."
-    },
-    {
-      question: "¿Cómo se guardan mis datos?",
-      answer: "Las contraseñas se almacenan de forma segura utilizando bcrypt. Ningún dato sensible es expuesto al frontend y todas las consultas a la base de datos están protegidas mediante consultas parametrizadas para prevenir inyecciones SQL."
-    },
-    {
-      question: "¿Qué son los periodos?",
-      answer: "Los periodos representan ciclos escolares, como semestres o cuatrimestres. Te permiten organizar materias, tareas, exámenes y calificaciones sin mezclar información de distintos ciclos académicos."
-    },
-    {
-      question: "¿Puedo acceder a mi información desde distintos dispositivos?",
-      answer: "Sí. Al iniciar sesión con tu cuenta, tu información estará disponible en cualquier dispositivo."
-    }
-  ];
 
   //Sprints data
   const latestSprint = allSprints[0];
@@ -170,10 +151,10 @@ export default function Inicio() {
                     className="w-full h-full"
                     src={latestSprint.videoUrl}
                     title="Demo Kitab"
-                    frameborder="0"
+                    frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                    referrerpolicy="strict-origin-when-cross-origin" 
-                    allowfullscreen></iframe>
+                    referrerPolicy="strict-origin-when-cross-origin" 
+                    allowFullScreen></iframe>
                 </div>
                 <div className="p-4 bg-white/5">
                   <p className="text-sm text-gray-400">
@@ -248,49 +229,47 @@ export default function Inicio() {
         <section className="flex flex-col md:flex-row w-full px-6 pt-16 sm:pt-18 pb-6 overflow-hidden">
           {/* Title */}
           <div className="flex flex-1 text-3xl font-light">Preguntas Frecuentes</div>
+            {/* Questions Container */}
+            <div className="flex flex-1 flex-col pt-6 md:pt-0">
+              {/* Questions accordeon */
+                faqs.map((faq, index) =>{
+                  const isOpen = openIndex === index;
+                  return(
+                    <div key={index} 
+                    className="border border-slate-900 bg-white/7 overflow-hidden transition-colors duration-300">
 
-          {/* Questions Container */}
-          <div className="flex flex-1 flex-col pt-6 md:pt-0">
-            {/* Questions accordeon */
-            faqs.map((faq, index) =>{
-              const isOpen = openIndex === index;
-              return(
-                <div key={index} 
-                className="border border-slate-900 bg-white/7 overflow-hidden transition-colors duration-300">
+                      {/* Question button */}
+                      <button
+                        onClick={() => toggleFAQ(index)}
+                        className="w-full flex justify-between items-center p-5 text-left text-white font-medium hover:bg-slate-900/40 transition-colors gap-2 cursor-pointer"
+                      >
+                        <span>{faq.question}</span>
+                        <ChevronDown 
+                          className={`w-5 h-5 min-w-5 min-h-5 text-slate-400 transition-transform duration-300 ${
+                            isOpen ? "rotate-180 text-blue-500" : ""
+                          }`}
+                        />
+                      </button>
 
-                  {/* Question button */}
-                  <button
-                    onClick={() => toggleFAQ(index)}
-                    className="w-full flex justify-between items-center p-5 text-left text-white font-medium hover:bg-slate-900/40 transition-colors gap-2 cursor-pointer"
-                  >
-                    <span>{faq.question}</span>
-                    <ChevronDown 
-                      className={`w-5 h-5 min-w-5 min-h-5 text-slate-400 transition-transform duration-300 ${
-                        isOpen ? "rotate-180 text-blue-500" : ""
-                      }`}
-                    />
-                  </button>
+                      {/* Contenedor del Acordeón Animado (El truco de Grid) */}
+                      <div 
+                        className={`grid transition-all duration-300 ease-in-out ${
+                          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                        }`}
+                      >
 
-                  {/* Contenedor del Acordeón Animado (El truco de Grid) */}
-                  <div 
-                    className={`grid transition-all duration-300 ease-in-out ${
-                      isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                    }`}
-                  >
-
-                    {/* Contenedor interno con overflow-hidden obligatorio */}
-                    <div className="overflow-hidden">
-                      <p className="p-5 pt-0 text-slate-400 text-sm leading-relaxed">
-                        {faq.answer}
-                      </p>
+                        {/* Contenedor interno con overflow-hidden obligatorio */}
+                        <div className="overflow-hidden">
+                          <p className="p-5 pt-0 text-slate-400 text-sm leading-relaxed">
+                            {faq.answer}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )
-            })
-            }
-
-          </div>
+                  )
+                })
+              }
+            </div>
         </section>
       </div>
     </div>
