@@ -5,7 +5,7 @@ import { useClickOutside } from "@/customHooks/useClickOutside.jsx";
 import ClassForm from "@/components/ClassForm.jsx";
 import { Link } from "react-router-dom";
 import { usePeriod } from "@/context/PeriodContext";
-import { notify } from "@/utils";
+import { notify } from "@/notify";
 import { apiFetch } from "@/services/apiFetch";
 import ColorPicker from "@/components/ColorPicker";
 import SectionLoader from "@/components/SectionLoader";

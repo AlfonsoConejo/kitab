@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { apiFetch } from "../services/apiFetch.js";
 import { useParams } from "react-router-dom";
-import { notify } from "@/utils.jsx";
+import { notify } from "@/notify.js";
 import { usePeriod } from "@/context/PeriodContext.jsx";
 import ColorPicker from "@/components/ColorPicker.jsx";
 import SectionLoader from "@/components/SectionLoader.jsx";

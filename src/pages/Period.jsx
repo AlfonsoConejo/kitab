@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import NoActivePeriodMessage from "@/components/NoActivePeriodMessage";
 import { apiFetch } from "@/services/apiFetch";
 import { useState, useEffect, useMemo } from "react";
-import { notify } from "@/utils";
+import { notify } from "@/notify";
 import { Pencil, Trash2, CheckCircle, Circle } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { usePeriod } from "@/context/PeriodContext";

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import { notify } from '@/utils';
+import { notify } from '@/notify';
 import { useClickOutside } from '@/customHooks/useClickOutside';
 
 export default function AppHeader({user, setUser}) {

@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { apiFetch } from "../services/apiFetch.js";
-import { notify } from "@/utils.jsx";
+import { notify } from "@/notify.js";
 import { User, CalendarDays, Clock3, MapPin, Laptop, Building2, FlaskConical, Wrench, Notebook, Paintbrush, ChevronDown} from "lucide-react"
 import { DAY_NAMES, formatDate, formatTime } from "@/functions.js";
 import SectionLoader from "@/components/SectionLoader.jsx";

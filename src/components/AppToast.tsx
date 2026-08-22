@@ -1,6 +1,7 @@
 import { CheckCircle, CircleAlert, TriangleAlert, Info } from "lucide-react";
+import type{ ToastConfig, ToastType } from "@/types/toast";
 
-const config = {
+const config: Record<ToastType, ToastConfig> = {
   success: {
     icon: CheckCircle,
     border: "border-slate-700",
@@ -23,8 +24,13 @@ const config = {
   },
 };
 
-export function AppToast({ type, message }) {
-  const { icon: Icon, border, iconColor } = config[type];
+type AppToastProps = {
+  type: ToastType;
+  message: string;
+}
+
+export function AppToast({ type, message }: AppToastProps) {
+  const { icon: Icon, iconColor } = config[type];
 
   return (
     <div

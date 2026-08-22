@@ -3,7 +3,7 @@ import EmptySection from "@/components/EmptySection";
 import { apiFetch } from "@/services/apiFetch";
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { notify } from "@/utils";
+import { notify } from "@/notify";
 import { usePeriod } from "@/context/PeriodContext";
 import { BookOpen, CalendarDays, User, Trash2, Pencil } from "lucide-react";
 import { formatDate, getClassDays } from "@/functions";
