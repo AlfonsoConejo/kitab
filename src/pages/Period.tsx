@@ -8,13 +8,23 @@ import ConfirmModal from "@/components/ConfirmModal";
 import { usePeriod } from "@/context/PeriodContext";
 import SectionLoader from "@/components/SectionLoader";
 import { formatDate } from "@/functions";
+import type { Period } from "@/types/period";
+
+interface PeriodSectionProps {
+  title: string;
+  periods: Period[];
+  selectedPeriod: Period | null;
+  onSelect: (periodId: number) => void;
+  onEdit: (period: Period) => void;
+  onDelete: (period: Period) => void;
+}
 
 export default function Period() {
   const navigate = useNavigate();
   const { selectedPeriod, setSelectedPeriod } = usePeriod();
 
-  const [periods, setPeriods] = useState([]);
-  const [periodToDelete, setPeriodToDelete] = useState(null);
+  const [periods, setPeriods] = useState<Period[]>([]);
+  const [periodToDelete, setPeriodToDelete] = useState<Period | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const upcomingPeriods = useMemo(() => {
@@ -40,6 +50,8 @@ export default function Period() {
       return start <= today && end >= today;
     });
   }, [periods]);
+
+  console.log("current periods: ", currentPeriods);
 
   const previousPeriods = useMemo(() => {
     const today = new Date();
@@ -75,7 +87,7 @@ export default function Period() {
         const data = await res.json();
         setPeriods(data.data || []);
       } catch (error) {
-        if (error.message !== "SESSION_EXPIRED") {
+        if (error instanceof Error && error.message !== "SESSION_EXPIRED") {
           notify("error", "Error de conexión.");
         }
       } finally {
@@ -85,7 +97,7 @@ export default function Period() {
     fetchPeriods();
   }, []);
 
-  async function handleSelectPeriod(periodId) {
+  function handleSelectPeriod(periodId: number) {
     const clickedPeriod = periods.find((p) => p.id === periodId);
     if (!clickedPeriod) {
       notify("error", "No se encontró el periodo");
@@ -94,11 +106,11 @@ export default function Period() {
     setSelectedPeriod(clickedPeriod);
   }
 
-  async function handleEditPeriod(period) {
+  function handleEditPeriod(period: Period) {
     navigate(`/app/periods/${period.id}/edit`);
   }
 
-  async function handleDeletedPeriod(period) {
+  async function handleDeletedPeriod(period: Period) {
     try {
       const res = await apiFetch(`/api/periods/${period.id}`, {
         method: "DELETE",
@@ -203,7 +215,7 @@ function PeriodSection({
   onSelect,
   onEdit,
   onDelete,
-}) {
+}: PeriodSectionProps) {
   return (
     <div className="w-full">
       <div className="flex items-center gap-3 mb-3">
@@ -284,7 +296,7 @@ function PeriodSection({
                           </span>
                         ) : (
                           <button
-                            onClick={() => onSelect?.(period.id)}
+                            onClick={() => onSelect(period.id)}
                             className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded transition-colors cursor-pointer"
                           >
                             <Circle size={14} />
@@ -295,14 +307,14 @@ function PeriodSection({
                         {/* Botones editar/eliminar */}
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => onEdit?.(period)}
+                            onClick={() => onEdit(period)}
                             className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
                             title="Editar"
                           >
                             <Pencil size={16} />
                           </button>
                           <button
-                            onClick={() => onDelete?.(period)}
+                            onClick={() => onDelete(period)}
                             className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                             title="Eliminar"
                           >

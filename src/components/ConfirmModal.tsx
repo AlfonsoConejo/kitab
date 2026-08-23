@@ -1,6 +1,8 @@
-export default function ConfirmModal({title, message, confirmText, variant, onClose, onConfirm}) {
+import type { ConfirmModalProps, ConfirmModalVariant, ConfirmModalVariantProps } from "@/types/confirmModal";
 
-  const variants = {
+export default function ConfirmModal({title, message, confirmText, variant, onClose, onConfirm}: ConfirmModalProps) {
+
+  const variants: Record<ConfirmModalVariant, ConfirmModalVariantProps> = {
     danger: {
       button: "bg-red-600 hover:bg-red-500",
       text: "text-red-400",

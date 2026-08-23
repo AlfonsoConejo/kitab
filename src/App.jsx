@@ -9,7 +9,7 @@ import Dashboard from './pages/Dashboard';
 import AuthLayout from './layouts/AuthLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './layouts/AppLayout';
-import Period from './pages/Period';
+import Period from './pages/Period'
 import Calendar from './pages/Calendar';
 import Tasks from './pages/Tasks';
 import Tests from './pages/Tests';
