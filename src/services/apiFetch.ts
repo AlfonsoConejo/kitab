@@ -1,7 +1,11 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
-export const apiFetch = async (url, options = {}) => {
+export const apiFetch = async (
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> => {
   console.log("entramos");
+
   let response = await fetch(`${API_URL}${url}`, {
     ...options,
     credentials: "include",

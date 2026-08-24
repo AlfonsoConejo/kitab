@@ -10,6 +10,13 @@ export interface Period {
   userId: number;
 }
 
+export type PeriodFormData = {
+  name: string;
+  startDate: string;
+  endDate: string;
+  color: string;
+};
+
 export interface PeriodContextType {
   selectedPeriod: Period | null;
   setSelectedPeriod: React.Dispatch<React.SetStateAction<Period | null>>;
@@ -25,3 +32,18 @@ export interface GetPeriodsResponse {
   data?: Period[];
   message?: string;
 }
+
+// When only getting one period
+export interface GetPeriodSuccessResponse {
+  success: true;
+  data: Period;
+}
+
+export interface GetPeriodErrorResponse {
+  success: false;
+  message: string;
+}
+
+export type GetPeriodResponse =
+  | GetPeriodSuccessResponse
+  | GetPeriodErrorResponse;

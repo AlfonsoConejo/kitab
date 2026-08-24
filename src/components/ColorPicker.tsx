@@ -3,14 +3,21 @@ import { ChevronDown } from "lucide-react";
 import { useClickOutside } from "@/customHooks/useClickOutside";
 import defaultColors from "@/data/colors";
 
+type ColorPickerProps = {
+  value: string;
+  onChange: (color: string) => void;
+  colors?: string[];
+  label?: string;
+}
+
 export default function ColorPicker({
   value,
   onChange,
   colors = defaultColors,
   label = "Color",
-}) {
+}: ColorPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const colorPickerRef = useRef(null);
+  const colorPickerRef = useRef<HTMLDivElement | null>(null);
 
   useClickOutside(
     colorPickerRef,

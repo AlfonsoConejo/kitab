@@ -1,4 +1,3 @@
-import React from "react";
 import allSprints from '../data/sprints';
 import { useEffect } from "react";
 import { Play } from "lucide-react";
@@ -14,7 +13,7 @@ export default function Sprints() {
     <div className="h-auto w-full text-white">
       {/* CENTER WRAPPER */}
       <div className="mx-auto flex flex-col w-full max-w-7xl justify-center">
-        <section className="flex flex-col w-full max-w-4xl mx-auto px-6 pt-10 sm:pt-12 pb-6 gap-6 overflow-hidden gap-6">
+        <section className="flex flex-col w-full max-w-4xl mx-auto px-6 pt-10 sm:pt-12 pb-6 overflow-hidden gap-6">
           {/* Title */}
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold tracking-tight text-white">

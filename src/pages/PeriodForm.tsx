@@ -1,12 +1,12 @@
-import { CalendarDays } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { apiFetch } from "../services/apiFetch.js";
+import { useState, useEffect , ChangeEvent} from "react";
+import { apiFetch } from "../services/apiFetch";
 import { useParams } from "react-router-dom";
 import { notify } from "@/notify.js";
-import { usePeriod } from "@/context/PeriodContext.jsx";
-import ColorPicker from "@/components/ColorPicker.jsx";
-import SectionLoader from "@/components/SectionLoader.jsx";
+import { usePeriod } from "@/context/PeriodContext";
+import ColorPicker from "@/components/ColorPicker";
+import SectionLoader from "@/components/SectionLoader";
+import type { PeriodFormData, GetPeriodResponse } from "@/types/period";
 
 export default function PeriodForm() {
 
@@ -14,7 +14,7 @@ export default function PeriodForm() {
   const navigate = useNavigate();
 
   // States
-  const [formData, setFormData] = useState({ name: '', startDate: '', endDate: '', color: '#EF4444'});
+  const [formData, setFormData] = useState<PeriodFormData>({ name: '', startDate: '', endDate: '', color: '#EF4444'});
   const [isSending, setIsSending] = useState(false);
   const [serverError, setServerError] = useState("");
 
@@ -39,10 +39,16 @@ export default function PeriodForm() {
           method: "GET",
         });
 
-        const data = await res.json();
+        const data: GetPeriodResponse = await res.json();
 
         if (!res.ok) {
           notify("error", "No se pudo obtener el periodo");
+          navigate("/app/periods");
+          return;
+        }
+
+        if (!data.success) {
+          notify("error", data.message);
           navigate("/app/periods");
           return;
         }
@@ -73,7 +79,7 @@ export default function PeriodForm() {
   !formData.color ||
   isSending;
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setServerError("");
 
     const { name, value } = e.target;
@@ -94,7 +100,7 @@ export default function PeriodForm() {
     }));
   };
 
-  const handleColorChange = (color) => {
+  const handleColorChange = (color: string) => {
     setServerError("");
     setFormData(prev => ({
       ...prev,
@@ -102,7 +108,7 @@ export default function PeriodForm() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
     //Clean data before sending
@@ -126,7 +132,7 @@ export default function PeriodForm() {
 
     try {
       const res = await apiFetch(endpoint, {
-        method: method,
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -151,7 +157,7 @@ export default function PeriodForm() {
 
       navigate('/app/periods');
     } catch (error) {
-      if (error.message === "SESSION_EXPIRED") {
+      if (error instanceof Error && error.message === "SESSION_EXPIRED") {
         return;
       }
       setServerError("Error en el servidor");
