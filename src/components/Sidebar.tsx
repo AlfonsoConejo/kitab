@@ -32,7 +32,7 @@ export default function Sidebar() {
         </ul>
 
         <ul className="pt-5 mt-5 space-y-2 border-t border-gray-700">
-          <h3 className="text-xs text-white">GENERAL</h3>
+          <h3 className="hidden md:block text-xs text-white">GENERAL</h3>
           <li>
             <NavLink
               to="/app/dashboard"
@@ -43,8 +43,8 @@ export default function Sidebar() {
                 `
               }
             >
-              <LayoutDashboard size={19}/>
-              <span className="ml-3 text-sm">Tablero</span>
+              <LayoutDashboard className="6-7 h-6 md:w-5 md:h-5" />
+              <span className="hidden md:block ml-3 text-sm">Tablero</span>
             </NavLink>
           </li>
           
@@ -56,8 +56,8 @@ export default function Sidebar() {
               `
               }
             >
-              <CalendarDays size={19}/>
-              <span className="ml-3 text-sm">Calendario</span>
+              <CalendarDays className="6-7 h-6 md:w-5 md:h-5"/>
+              <span className="hidden md:block ml-3 text-sm">Calendario</span>
             </NavLink>
           </li>
         </ul>
@@ -73,8 +73,8 @@ export default function Sidebar() {
               `
               }
             >
-              <ClipboardList size={19}/>
-              <span className="ml-3 text-sm">Tareas</span>
+              <ClipboardList className="6-7 h-6 md:w-5 md:h-5"/>
+              <span className="hidden md:block ml-3 text-sm">Tareas</span>
             </NavLink>
           </li>
 
@@ -86,8 +86,8 @@ export default function Sidebar() {
               `
               }
             >
-              <FileSpreadsheet size={19}/>
-              <span className="ml-3 text-sm">Exámenes</span>
+              <FileSpreadsheet className="6-7 h-6 md:w-5 md:h-5"/>
+              <span className="hidden md:block ml-3 text-sm">Exámenes</span>
             </NavLink>
           </li>
 
@@ -99,8 +99,8 @@ export default function Sidebar() {
               `
               }
             >
-              <BookOpen size={19}/>
-              <span className="ml-3 text-sm">Materias</span>
+              <BookOpen className="6-7 h-6 md:w-5 md:h-5"/>
+              <span className="hidden md:block ml-3 text-sm">Materias</span>
             </NavLink>
           </li>
 
@@ -112,8 +112,8 @@ export default function Sidebar() {
               `
               }
             >
-              <Parasol size={19}/>
-              <span className="ml-3 text-sm">Vacaciones</span>
+              <Parasol className="6-7 h-6 md:w-5 md:h-5"/>
+              <span className="hidden md:block ml-3 text-sm">Vacaciones</span>
             </NavLink>
           </li>
         </ul>

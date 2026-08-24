@@ -5,7 +5,7 @@ import { useClickOutside } from '@/customHooks/useClickOutside';
 
 export default function LandingHeader() {
 
-  const menuButtonRef = useRef(null);
+  const menuButtonRef = useRef<HTMLDivElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   useClickOutside(menuButtonRef, () => setIsMenuOpen(false));
   
@@ -15,7 +15,7 @@ export default function LandingHeader() {
         <nav className="flex flex-wrap justify-between items-center mx-auto max-w-7xl">
         
           {/* Left container */}
-          <div className="flex items-center order-1 gap-1 " ref={menuButtonRef}>
+          <div className="flex items-center order-1 gap-1">
             {/* Hamburger menu */}
             <button 
               type="button"

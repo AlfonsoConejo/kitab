@@ -1,4 +1,13 @@
 import { Link } from "react-router-dom";
+import { type LucideIcon } from "lucide-react";
+
+type EmptySectionProps = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  buttonText: string;
+  buttonLink: string;
+}
 
 export default function EmptySection({
   icon: Icon,
@@ -6,7 +15,7 @@ export default function EmptySection({
   description,
   buttonText,
   buttonLink
-}) {
+}: EmptySectionProps) {
   return (
     <div className="flex flex-col justify-center items-center w-full h-full p-6 rounded-xl">
       <Icon
