@@ -1,29 +1,34 @@
-import { createContext, useEffect, useState, useRef} from "react";
+import { createContext, useEffect, useState, useRef } from "react";
+import type { AuthContextType, User, GetMeResponse, AuthProviderProps } from "@/types/user";
 
-export const AuthContext = createContext();
+export const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const didCheckAuth = useRef(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const logoutUser = async () => {
+  const logoutUser = async (): Promise<void> => {
     try {
-      await fetch(`${API_URL}/api/auth/logout`, {
+      const res = await fetch(`${API_URL}/api/auth/logout`, {
         method: "POST",
-        credentials: "include"
+        credentials: "include",
       });
+
+      if (!res.ok) {
+        throw new Error("LOGOUT_FAILED");
+      }
     } catch (error) {
       console.error(error);
+    } finally {
+      setUser(null);
     }
-
-    setUser(null);
   };
-
+  
   useEffect(() => {
 
     if (didCheckAuth.current) return;
@@ -39,9 +44,14 @@ export const AuthProvider = ({ children }) => {
 
         // ACCESS TOKEN VALID
         if (resMe.ok) {
-          const dataMe = await resMe.json();
+          const dataMe: GetMeResponse = await resMe.json();
 
-          setUser(dataMe.data.user);
+          if (dataMe.success) {
+            setUser(dataMe.data.user);
+          } else {
+            console.error(dataMe.message);
+            setUser(null);
+          }
         } else {
 
           // ACCESS TOKEN EXPIRED -> REFRESH
@@ -67,9 +77,14 @@ export const AuthProvider = ({ children }) => {
             return;
           }
 
-          const dataMe = await resMe.json();
-
-          setUser(dataMe.data.user);
+          const dataMe: GetMeResponse = await resMe.json();
+          
+          if (dataMe.success) {
+            setUser(dataMe.data.user);
+          } else {
+            console.error(dataMe.message);
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error(error);

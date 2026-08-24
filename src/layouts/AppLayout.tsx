@@ -1,23 +1,22 @@
-import { Outlet} from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from  '../customHooks/useAuth' 
 import AppHeader from '../components/header/AppHeader';
 import Sidebar from '../components/Sidebar'
-export default function AppLayout() {
 
-  const {user, setUser, authLoading} = useAuth();
-  console.log(user, authLoading);
+export default function AppLayout() {
+  const { user, authLoading } = useAuth();
 
   if (authLoading) {
     return <p>Cargando Aplicación</p>;
   }
 
-  return(
+  if (!user) {
+    return <Navigate to="/auth/login" replace />;
+  }
+
+  return (
     <div className="h-dvh flex flex-col">
-      <AppHeader 
-        user={user}
-        setUser={setUser}
-        authLoading={authLoading}
-      />
+      <AppHeader user={user}/>
 
       <div className="flex flex-1 min-h-0">
         <Sidebar />
@@ -27,5 +26,5 @@ export default function AppLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }

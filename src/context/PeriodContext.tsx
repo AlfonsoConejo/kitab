@@ -1,12 +1,15 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "../customHooks/useAuth";
+import type { Period, PeriodContextType, PeriodProviderProps} from "@/types/period";
 
-export const PeriodContext = createContext();
+export const PeriodContext = createContext<PeriodContextType | null>(null);
 
-export const PeriodProvider = ({ children }) => {
+export const PeriodProvider = ({ children }: PeriodProviderProps) => {
+
+  
   const { user, authLoading } = useAuth();
 
-  const [selectedPeriod, setSelectedPeriod] = useState(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<Period | null>(null);
   const [isLoadingPeriod, setIsLoadingPeriod] = useState(true);
 
   useEffect(() => {
@@ -65,4 +68,12 @@ export const PeriodProvider = ({ children }) => {
   );
 };
 
-export const usePeriod = () => useContext(PeriodContext);
+export const usePeriod = () => {
+  const context = useContext(PeriodContext);
+
+  if (!context) {
+    throw new Error("usePeriod debe utilizarse dentro de un PeriodProvider");
+  }
+
+  return context;
+};

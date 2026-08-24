@@ -1,76 +1,54 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { notify } from '@/notify';
 import { useClickOutside } from '@/customHooks/useClickOutside';
+import avatarColors from '@/data/avatarColors';
+import type { User } from '@/types/user';
+import { useAuth } from '@/customHooks/useAuth';
 
-export default function AppHeader({user, setUser}) {
+interface MenuItem {
+  label: string;
+  action: () => void | Promise<void>;
+}
+interface AppHeaderProps {
+  user: User;
+}
 
+export default function AppHeader({user}: AppHeaderProps) {
+
+  const { logoutUser } = useAuth();
   const navigate = useNavigate();
-
-  const API_URL = import.meta.env.VITE_API_URL;
   
-  const avatarRef = useRef(null);
+  const avatarRef = useRef<HTMLDivElement | null>(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   useClickOutside(avatarRef, () => setIsProfileMenuOpen(false));
 
-  // Array of colors for Avatar
-  const colors = [
-    "#4ADE80",
-    "#60A5FA",
-    "#F87171",
-    "#FACC15",
-    "#FB923C",
-    "#A16207",
-    "#A78BFA"
-  ];
-
   // Create avatar icon
   const firstLetter = user.firstName[0].toUpperCase();
-  const colorIndex = firstLetter.charCodeAt(0) % colors.length;
-  const avatarColor = colors[colorIndex];
+  const colorIndex = firstLetter.charCodeAt(0) % avatarColors.length;
+  const avatarColor = avatarColors[colorIndex];
 
   const handleSettings = () => {
-    navigate("app/settings");
+    navigate("/app/settings");
   };
 
 
   const handleLogOut = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/auth/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      const resData = await res.json();
-
-      if (!res.ok) {
-        notify("error", "Error al cerrar sesión.");
-        return;
-      }
-
-      setUser(null);
-      notify("success", "Sesión cerrada.");
-      
-    } catch (error) {
-      console.error(error);
-      notify("error", "Error al cerrar sesión.");
-    }
+    await logoutUser();
+    notify("success", "Sesión cerrada.");
   };
 
   //Array of Avatar button options
-  const menuItems = [
-    {
-      label: "Configuración",
-      action: handleSettings,
-    },
-    {
-      label: "Cerrar sesión",
-      action: handleLogOut,
-    },
-  ];
+  const menuItems: MenuItem[] = [
+  {
+    label: "Configuración",
+    action: handleSettings,
+  },
+  {
+    label: "Cerrar sesión",
+    action: handleLogOut,
+  },
+];
 
   return(
     <header>
