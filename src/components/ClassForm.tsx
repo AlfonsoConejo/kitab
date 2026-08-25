@@ -1,10 +1,28 @@
 import { X, ChevronDown, TriangleAlert } from "lucide-react";
-import { formatTime, getDaysLabel } from "@/functions";
 import { useState } from "react";
 import ExternalConflicts from "./ExternalConflicts";
 import InternalConflicts from "./InternalConflicts";
+import type { FormClass, FormClassField } from "@/types/class";
+import type { ExternalConflict, InternalConflict } from "@/types/conflicts";
 
-const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isRecalculatingConflicts, onChange, onDelete }) => {
+type ClassFormProps = {
+  classData: FormClass;
+  isEditMode: boolean;
+  isNew: boolean;
+  conflicts: {
+    externalConflicts: ExternalConflict[];
+    internalConflicts: InternalConflict[];
+  };
+  conflictCount: number;
+  isRecalculatingConflicts: boolean;
+  onChange: <K extends FormClassField>(
+    field: K,
+    value: FormClass[K]
+  ) => void;
+  onDelete: () => void;
+};
+
+const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isRecalculatingConflicts, onChange, onDelete }: ClassFormProps) => {
 
   const { externalConflicts, internalConflicts } = conflicts;
 
@@ -13,9 +31,9 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
   const isClassOnsite = classData.mode === "onsite";
 
   const hasSchedule =
-    classData.days?.length > 0 &&
-    classData.startTime &&
-    classData.endTime;
+    classData.days.length > 0 &&
+    Boolean(classData.startTime) &&
+    Boolean(classData.endTime);
 
    const daysMap = [
     { label: "Lun", value: 1 },
@@ -27,7 +45,7 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
     { label: "Dom", value: 7 },
   ];
 
-  function toggleDay(dayValue) {
+  function toggleDay(dayValue: number) {
     const currentDays = classData.days || [];
 
     const exists = currentDays.includes(dayValue);
@@ -148,7 +166,9 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
           <div className="relative">
             <select
               value={classData.type}
-              onChange={(e) => onChange("type", e.target.value)}
+              onChange={(e) =>
+                onChange("type", e.target.value as FormClass["type"])
+              }
               className="
                 block 
               bg-gray-700
@@ -196,7 +216,9 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
           <div className="relative">
             <select
               value={classData.mode}
-              onChange={(e) => onChange("mode", e.target.value)}
+              onChange={(e) =>
+                onChange("mode", e.target.value as FormClass["mode"])
+              }
               className="
               block 
               bg-gray-700
@@ -249,7 +271,7 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
                 type="text"
                 maxLength={10}
                 placeholder="B-204"
-                value={classData.classroom}
+                value={classData.classroom ?? ""}
                 onChange={(e) => onChange("classroom", e.target.value)}
                 className="
                   block 

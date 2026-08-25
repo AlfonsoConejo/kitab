@@ -1,6 +1,13 @@
 import { formatTime, getDaysLabel } from "@/functions";
+import type { ConflictColorVariants, InternalConflict } from "@/types/conflicts"; 
 
-export default function InternalConflicts({ conflicts, classId, variant }) {
+type InternalConflictsProps = {
+  conflicts: InternalConflict[];
+  classId: string;
+  variant: ConflictColorVariants;
+};
+
+export default function InternalConflicts({ conflicts, classId, variant }: InternalConflictsProps) {
   if (conflicts.length === 0) {
     return null;
   }

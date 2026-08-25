@@ -1,6 +1,12 @@
 import { formatTime, getDaysLabel } from "@/functions";
+import type { ConflictColorVariants, ExternalConflict } from "@/types/conflicts";
 
-export default function ExternalConflicts({ conflicts, variant }) {
+type ExternalConflictsProps = {
+  conflicts: ExternalConflict[];
+  variant: ConflictColorVariants;
+};
+
+export default function ExternalConflicts({ conflicts, variant }: ExternalConflictsProps) {
   if (conflicts.length === 0) {
     return null;
   }

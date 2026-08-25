@@ -1,16 +1,31 @@
 import { useParams, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
-import { BookOpen, NotebookPen } from "lucide-react";
-import { useClickOutside } from "@/customHooks/useClickOutside.jsx";
-import ClassForm from "@/components/ClassForm.jsx";
+import { useState, useEffect, useRef, type ChangeEvent } from "react";
+import { useClickOutside } from "@/customHooks/useClickOutside";
+import ClassForm from "@/components/ClassForm";
 import { Link } from "react-router-dom";
 import { usePeriod } from "@/context/PeriodContext";
 import { notify } from "@/notify";
 import { apiFetch } from "@/services/apiFetch";
 import ColorPicker from "@/components/ColorPicker";
 import SectionLoader from "@/components/SectionLoader";
-import { areSameDay } from "@/utils/date.utils.js";
+import { areSameDay } from "@/utils/date.utils";
 import ConfirmModal from "@/components/ConfirmModal";
+import type { FormClass, ClassSubmitData, FormClassField } from "@/types/class";
+import type { SubjectForm, GetSubjectWithClassesResponse } from "@/types/subject";
+import type { InternalConflict, ExternalConflict, CheckExternalConflictsResponse, CheckInternalConflictsResponse } from "@/types/conflicts";
+
+type SubjectSubmitData = {
+  name: string;
+  teacher: string | null;
+  color: string;
+  startDate: string;
+  endDate: string;
+  classes: ClassSubmitData[];
+};
+
+type SubjectUpdateData = SubjectSubmitData & {
+  deletedClassIds: number[];
+};
 
 export default function SubjectsForm() {
   
@@ -28,34 +43,36 @@ export default function SubjectsForm() {
   const isEditMode = Boolean(id);
 
   //States
-  const [subject, setSubject] = useState({ 
-    periodId: selectedPeriod?.id, 
-    name: '', 
-    teacher: '', 
-    color: '#EF4444',
-    startDate: '',
-    endDate: '',
-    classes: [],
-  });
+  const [subject, setSubject] = useState<SubjectForm>({
+  periodId: 0,
+  name: "",
+  teacher: "",
+  color: "#EF4444",
+  startDate: "",
+  endDate: "",
+  classes: [],
+});
 
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isLoadingSubject, setIsLoadingSubject] = useState(isEditMode);
-  const [isManualDate, setIsManualDate] = useState(null);
+  const [isManualDate, setIsManualDate] = useState<boolean | null>(null);
   const [serverError, setServerError] = useState("");
 
-  const [externalConflicts, setExternalConflicts] = useState([]);
-  const [internalConflicts, setInternalConflicts] = useState([]);
+  const [externalConflicts, setExternalConflicts] = useState<ExternalConflict[]>([]);
+  const [internalConflicts, setInternalConflicts] = useState<InternalConflict[]>([]);
   const [isRecalculatingConflicts, setIsRecalculatingConflicts] = useState(false);
-  const conflictCalculationId = useRef(0)
 
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);;
+  const conflictCalculationId = useRef(0);
 
-  const [deletedClassIds, setDeletedClassIds] = useState([]); // Mark to delete
-  const [deletingClassIds, setDeletingClassIds] = useState([]); // // Mark to animate deletion
-  const [addingClassIds, setAddingClassIds] = useState([]); // Set class to animate entrance
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
-  const classesEndRef = useRef(null);
+  const [deletedClassIds, setDeletedClassIds] = useState<number[]>([]); // Mark to delete
+  const [deletingClassIds, setDeletingClassIds] = useState<string[]>([]); // Mark to animate deletion
+  const [addingClassIds, setAddingClassIds] = useState<string[]>([]); // Set class to animate entrance
+
+  const classesEndRef = useRef<HTMLDivElement | null>(null);
+  const colorPickerRef = useRef<HTMLDivElement | null>(null);
 
   // Set the document title
   useEffect(() => {
@@ -72,15 +89,16 @@ export default function SubjectsForm() {
           method: "GET",
         });
 
-        const subjectData = await resSubject.json();
+        const subjectData: GetSubjectWithClassesResponse =
+          await resSubject.json();
 
-        if (!resSubject.ok) {
-          notify("error", "No se pudo encontrar la materia");
+        if (!subjectData.success) {
+          notify("error", subjectData.message);
           navigate("/app/subjects");
           return;
         }
 
-        const classes = subjectData.data.classes.map((cls) => ({
+        const classes: FormClass[] = subjectData.data.classes.map((cls) => ({
           id: cls.id,
           tempId: crypto.randomUUID(),
           days: cls.days,
@@ -138,12 +156,12 @@ export default function SubjectsForm() {
         ]);
 
         if (!externalRes.ok) {
-          notify(externalData.message);
+          notify("error", externalData.message);
           return;
         }
 
         if (!internalRes.ok) {
-          notify(internalData.message);
+          notify("error", internalData.message);
           return;
         }
 
@@ -199,7 +217,7 @@ export default function SubjectsForm() {
           mode: "onsite",
           classroom: "",
           startTime: "",
-          endTime: ""
+          endTime: "",
         },
       ],
     }));
@@ -220,7 +238,6 @@ export default function SubjectsForm() {
     }, 101);
   }
 
-  const colorPickerRef = useRef(null);
   useClickOutside(colorPickerRef, () => setIsColorPickerOpen(false));
 
   // If user is creating a subject set setIsManualDate to false
@@ -232,7 +249,6 @@ export default function SubjectsForm() {
         startDate: selectedPeriod.startDate,
         endDate: selectedPeriod.endDate,
       }));
-      setIsManualDate(false);
     }
   }, [isEditMode, selectedPeriod])
 
@@ -280,7 +296,13 @@ export default function SubjectsForm() {
     setIsManualDate(true);
   };
 
-  const handleClassChange = async (tempId, field, value) => {
+  const handleClassChange = async <
+    K extends FormClassField
+  >(
+    tempId: string,
+    field: K,
+    value: FormClass[K]
+  ) => {
     const currentClass = subject.classes.find(
       (classItem) => classItem.tempId === tempId
     );
@@ -355,7 +377,7 @@ export default function SubjectsForm() {
     }
   };
 
-  const recalculateExternalConflicts = async (updatedClass, calculationId) => {
+  const recalculateExternalConflicts = async (updatedClass: FormClass, calculationId: number) => {
     try {
       const res = await apiFetch(
         `/api/subjects/classes/check-external-conflicts`,
@@ -372,9 +394,10 @@ export default function SubjectsForm() {
         }
       );
 
-      const data = await res.json();
+      const data: CheckExternalConflictsResponse =
+        await res.json();
 
-      if (!res.ok) {
+      if (!data.success) {
         notify("error", data.message);
         return;
       }
@@ -398,7 +421,7 @@ export default function SubjectsForm() {
     }
   };
 
-  const recalculateInternalConflicts = async (updatedClasses, calculationId) => {
+  const recalculateInternalConflicts = async (updatedClasses: FormClass[], calculationId: number) => {
     try {
       const res = await apiFetch(
         `/api/subjects/classes/check-internal-conflicts`,
@@ -413,9 +436,10 @@ export default function SubjectsForm() {
         }
       );
 
-      const data = await res.json();
+      const data: CheckInternalConflictsResponse =
+        await res.json();
 
-      if (!res.ok) {
+      if (!data.success) {
         notify("error", data.message);
         return;
       }
@@ -433,16 +457,17 @@ export default function SubjectsForm() {
     }
   };
 
-  function handleDeleteClass(tempId) {
+  function handleDeleteClass(tempId: string) {
     const classToDelete = subject.classes.find(
       (c) => c.tempId === tempId
     );
-
     if (!classToDelete) return;
 
     // Si existe en BD, marcar para eliminar
-    if (classToDelete.id) {
-      setDeletedClassIds((prev) => [...prev, classToDelete.id]);
+    if (classToDelete.id !== undefined) {
+      const classId = classToDelete.id;
+
+      setDeletedClassIds((prev) => [...prev, classId]);
     }
 
     // Eliminar inmediatamente sus conflictos
@@ -475,32 +500,34 @@ export default function SubjectsForm() {
     }, 300);
   }
 
-   // Función para obtener las clases que serán enviadas al backend
-  const getClassesForSubmit = () => {
-    return subject.classes.map(({
-      id,
-      days,
-      type,
-      mode,
-      classroom,
-      startTime,
-      endTime,
-    }) => ({
-      ...(id && { id }),
-      days,
-      type: type?.trim(),
-      mode: mode?.trim(),
-      classroom: classroom?.trim() || null,
-      startTime: startTime?.trim(),
-      endTime: endTime?.trim(),
-    }));
+  // Función para obtener las clases que serán enviadas al backend
+  const getClassesForSubmit = (): ClassSubmitData[] => {
+    return subject.classes.map(
+      ({
+        id,
+        days,
+        type,
+        mode,
+        classroom,
+        startTime,
+        endTime,
+      }) => ({
+        ...(id && { id }),
+        days,
+        type,
+        mode,
+        classroom: classroom?.trim() || null,
+        startTime: startTime.trim(),
+        endTime: endTime.trim(),
+      })
+    );
   };
 
   // Base function to clean subject's data
-  const prepareBaseSubjectData = () => {
+  const prepareBaseSubjectData = (): SubjectSubmitData => {
     return {
       name: subject.name.trim(),
-      teacher: subject.teacher.trim(),
+      teacher: subject.teacher?.trim() || null,
       color: subject.color,
       startDate: subject.startDate,
       endDate: subject.endDate,
@@ -509,19 +536,19 @@ export default function SubjectsForm() {
   };
 
   // Function to clean data sent for creation
-  const prepareCreateData = () => {
+  const prepareCreateData = (): SubjectSubmitData => {
     return prepareBaseSubjectData();
   };
 
   // Function to clean data sent for update
-  const prepareUpdateData = () => {
+  const prepareUpdateData = (): SubjectUpdateData => {
     return {
       ...prepareBaseSubjectData(),
       deletedClassIds,
     };
   };
 
-  const handleSubjectChange = (e) => {
+  const handleSubjectChange = (e: ChangeEvent<HTMLInputElement>) => {
     setServerError("");
 
     let { name, value } = e.target;
@@ -537,7 +564,7 @@ export default function SubjectsForm() {
     }));
   };
 
-  const handleColorChange = (color) => {
+  const handleColorChange = (color: string) => {
     setServerError("");
     setSubject(prev => ({
       ...prev,
@@ -552,12 +579,23 @@ export default function SubjectsForm() {
       : prepareCreateData();
 
     try {
-      let url, method;
+      let url: string;
+      let method: "POST" | "PUT";
 
       if (isEditMode) {
+        if (!subject.id) {
+          notify("error", "No se encontró el ID de la materia");
+          return;
+        }
+
         url = `/api/subjects/${subject.id}`;
         method = "PUT";
       } else {
+        if (!selectedPeriod) {
+          notify("error", "No hay un periodo seleccionado");
+          return;
+        }
+
         url = `/api/periods/${selectedPeriod.id}/subjects`;
         method = "POST";
       }
@@ -585,7 +623,6 @@ export default function SubjectsForm() {
       );
 
       navigate("/app/subjects");
-
     } catch (err) {
       console.error("Error al guardar:", err);
       notify("error", "No fue posible conectar con el servidor.");
@@ -595,7 +632,7 @@ export default function SubjectsForm() {
   };
 
   // Submit form
-  const handleSubmit = async (e) => {
+  const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
     if (!selectedPeriod) {
@@ -669,7 +706,7 @@ export default function SubjectsForm() {
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Subject name */}
                 <div className="flex flex-col gap-2">
-                  <label for="name" className="mb-2 text-sm font-medium text-white">
+                  <label htmlFor="name" className="mb-2 text-sm font-medium text-white">
                     Nombre de la materia
                   </label>
 
@@ -682,7 +719,6 @@ export default function SubjectsForm() {
                     maxLength={40}
                     value={subject.name}
 
-                    class="" 
                     className="
                       block 
                       bg-gray-700
@@ -717,7 +753,7 @@ export default function SubjectsForm() {
                       type="text"
                       placeholder="José Hernández"
                       maxLength={50}
-                      value={subject.teacher}
+                      value={subject.teacher ?? ""}
                       className="
                         block 
                         bg-gray-700
@@ -885,7 +921,7 @@ export default function SubjectsForm() {
               <div className="flex justify-between items-center pb-4 mb-4 rounded-t gap-4 border-b sm:mb-5 border-gray-600">
                 <div className="flex items-center gap-4">
                   <div>
-                    <h3 class="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-white">
                       Información de las clases
                     </h3>
 
