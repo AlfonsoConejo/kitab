@@ -1,4 +1,7 @@
-export const formatDate = (dateString, endDateString = null) => {
+export const formatDate = (
+  dateString: string,
+  endDateString: string | null = null
+): string => {
   const [year, month, day] = dateString.split("-");
 
   const months = [
@@ -17,7 +20,10 @@ export const formatDate = (dateString, endDateString = null) => {
   return `${Number(day)} ${months[Number(month) - 1]} ${year}`;
 };
 
-export function formatTime(time, hour12 = true) {
+export const formatTime = (
+  time: string,
+  hour12: boolean = true
+): string => {
   const date = new Date(`1970-01-01T${time}`);
 
   return new Intl.DateTimeFormat("es-MX", {
@@ -25,9 +31,9 @@ export function formatTime(time, hour12 = true) {
     minute: "2-digit",
     hour12,
   }).format(date);
-}
+};
 
-export const DAY_NAMES = {
+export const DAY_NAMES: Record<number, string> = {
   1: "Lun",
   2: "Mar",
   3: "Mié",
@@ -37,7 +43,7 @@ export const DAY_NAMES = {
   7: "Dom",
 };
 
-export const DAY_NAMES_COMPLETE = {
+export const DAY_NAMES_COMPLETE: Record<number, string> = {
   1: "Lunes",
   2: "Martes",
   3: "Miércoles",
@@ -47,7 +53,11 @@ export const DAY_NAMES_COMPLETE = {
   7: "Domingo",
 };
 
-export const getClassDays = (classes) => {
+type ClassWithDays = {
+  days: number[];
+};
+
+export const getClassDays = (classes: ClassWithDays[]): string => {
   if (!classes || classes.length === 0) {
     return "Sin clases";
   }
@@ -63,7 +73,7 @@ export const getClassDays = (classes) => {
   return days.map((day) => DAY_NAMES[day]).join(" • ");
 };
 
-export const getDaysLabel = (days) => {
+export const getDaysLabel = (days: number[]): string => {
   if (!days || days.length === 0) {
     return "Sin días";
   }
@@ -84,5 +94,5 @@ export const getDaysLabel = (days) => {
     return `${dayNames[0]} y ${dayNames[1]}`;
   }
 
-  return `${dayNames.slice(0, -1).join(", ")} y ${dayNames.at(-1)}`;
+  return `${dayNames.slice(0, -1).join(", ")} y ${dayNames[dayNames.length - 1]}`;
 };

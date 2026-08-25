@@ -1,60 +1,112 @@
 import { Link, useNavigate } from "react-router-dom";
 import { IoIosCloseCircleOutline } from "react-icons/io";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent, type FocusEvent } from "react";
 import { useAuth } from "../customHooks/useAuth";
-import './../App.css';
+import "./../App.css";
+
+type RegisterFormData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};
+
+type RegisterFormErrors = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};
+
+type RegisterFormTouched = {
+  firstName: boolean;
+  lastName: boolean;
+  email: boolean;
+  password: boolean;
+};
+
+type RegisterField = keyof RegisterFormData;
 
 export default function RegisterForm() {
-
   const navigate = useNavigate();
   const { setUser } = useAuth();
+
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // States
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', password: ''});
-  const [errors, setErrors] = useState({ firstName: '', lastName: '', email: '', password: ''});
-  const [touched, setTouched] = useState({ firstName: false, lastName: false, email: false, password: false});
+  const [formData, setFormData] = useState<RegisterFormData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
+
+  const [errors, setErrors] = useState<RegisterFormErrors>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
+
+  const [touched, setTouched] = useState<RegisterFormTouched>({
+    firstName: false,
+    lastName: false,
+    email: false,
+    password: false,
+  });
+
   const [isSending, setIsSending] = useState(false);
   const [serverError, setServerError] = useState("");
 
-  // Validate errors right after opening page
   const isSubmitDisabled =
-  !formData.firstName ||
-  !formData.lastName ||
-  !formData.email.trim() ||
-  !formData.password ||
-  Object.values(errors).some(error => error) ||
-  isSending;
+    !formData.firstName ||
+    !formData.lastName ||
+    !formData.email.trim() ||
+    !formData.password ||
+    Object.values(errors).some((error) => error) ||
+    isSending;
 
-  const handleChange = (e) => {
-    let { name, value } = e.target;
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name } = e.target;
+    let { value } = e.target;
 
-    //Only letters allowed in name fields
-    if (name === "firstName" || name === "lastName") {
+    if (!(name in formData)) return;
+
+    const field = name as RegisterField;
+
+    if (field === "firstName" || field === "lastName") {
       value = value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "");
     }
 
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleBlur = (e) => {
-    let { name, value } = e.target;
-
-    setTouched(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: true
-    }));
-
-    const error = validateField(name, value);
-
-    setErrors(prev => ({
-      ...prev,
-      [name]: error
+      [field]: value,
     }));
   };
 
+  const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
 
-  const validateField = (name, value) => {
+    if (!(name in formData)) return;
+
+    const field = name as RegisterField;
+
+    setTouched((prev) => ({
+      ...prev,
+      [field]: true,
+    }));
+
+    const error = validateField(field, value);
+
+    setErrors((prev) => ({
+      ...prev,
+      [field]: error,
+    }));
+  };
+
+  const validateField = (
+    name: RegisterField,
+    value: string
+  ): string => {
     const trimmed = value.trim();
 
     switch (name) {
@@ -64,18 +116,28 @@ export default function RegisterForm() {
 
       case "lastName":
         if (!trimmed) return "El apellido es obligatorio";
-        if (trimmed.length < 2) return "Debe tener al menos 2 caracteres";
+        if (trimmed.length < 2) {
+          return "Debe tener al menos 2 caracteres";
+        }
         return "";
 
-      case "email":
+      case "email": {
         const normalized = trimmed.toLowerCase();
+
         if (!normalized) return "El correo es obligatorio";
-        if (!/\S+@\S+\.\S+/.test(normalized)) return "Correo inválido";
+
+        if (!/\S+@\S+\.\S+/.test(normalized)) {
+          return "Correo inválido";
+        }
+
         return "";
+      }
 
       case "password":
         if (!value) return "La contraseña es obligatoria";
-        if (value.length < 6) return "Debe tener al menos 6 caracteres";
+        if (value.length < 6) {
+          return "Debe tener al menos 6 caracteres";
+        }
         return "";
 
       default:
@@ -83,11 +145,12 @@ export default function RegisterForm() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (
+    e: React.SubmitEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
-    // Revalidate fields one last time before sending
-    const newErrors = {
+    const newErrors: RegisterFormErrors = {
       firstName: validateField("firstName", formData.firstName),
       lastName: validateField("lastName", formData.lastName),
       email: validateField("email", formData.email),
@@ -96,17 +159,15 @@ export default function RegisterForm() {
 
     setErrors(newErrors);
 
-    // Prevent data from being sent if there are errors
-    const hasErrors = Object.values(newErrors).some(error => error);
+    const hasErrors = Object.values(newErrors).some(
+      (error) => error
+    );
+
     if (hasErrors) return;
 
-    //Set the form as sending
     setIsSending(true);
-
-    //Clean setServerError message
     setServerError("");
 
-    // Clean data for sending
     const cleanedData = {
       firstName: formData.firstName.trim(),
       lastName: formData.lastName.trim(),
@@ -121,7 +182,7 @@ export default function RegisterForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(cleanedData),
-        credentials: "include"
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -131,7 +192,6 @@ export default function RegisterForm() {
         return;
       }
 
-      // Automatic login after register
       const resLogin = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
@@ -139,32 +199,35 @@ export default function RegisterForm() {
         },
         body: JSON.stringify({
           email: cleanedData.email,
-          password: cleanedData.password
+          password: cleanedData.password,
         }),
-        credentials: "include"
+        credentials: "include",
       });
 
       const loginData = await resLogin.json();
 
       if (!resLogin.ok) {
-        setServerError(loginData.message || "Usuario o contraseña incorrectos");
+        setServerError(
+          loginData.message || "Usuario o contraseña incorrectos"
+        );
         return;
       }
 
       const meRes = await fetch(`${API_URL}/api/auth/me`, {
-        credentials: "include"
+        credentials: "include",
       });
 
       const meData = await meRes.json();
 
       if (!meRes.ok) {
-        setServerError(meData.message || "Usuario o contraseña incorrectos");
+        setServerError(
+          meData.message || "Usuario o contraseña incorrectos"
+        );
         return;
       }
 
       setUser(meData.user);
       navigate("/app/dashboard");
-
     } catch (error) {
       setServerError("Error en el servidor");
     } finally {
@@ -172,43 +235,46 @@ export default function RegisterForm() {
     }
   };
 
-
   useEffect(() => {
     document.title = "Registro";
   }, []);
-  
+
   return (
     <div className="min-h-dvh w-full bg-gray-900 flex items-center justify-center px-4 py-4">
       <div className="w-full max-w-md">
-
-        <div className='w-full flex justify-center items-center'>
+        <div className="w-full flex justify-center items-center">
           <Link to="/">
-            <img className='w-16 h-auto' src="/logo-azul.png" alt="site logo" />
+            <img
+              className="w-16 h-auto"
+              src="/logo-azul.png"
+              alt="site logo"
+            />
           </Link>
         </div>
 
         <div className="w-full max-w-md mt-4 bg-gray-800 border border-gray-700 rounded-2xl p-8 shadow-xl">
-        
-          {/* HEADER */}
           <h1 className="text-white text-2xl font-semibold text-center mb-6">
             Crear cuenta
           </h1>
 
-          {/* FORM */}
-          <form onSubmit={handleSubmit} className="space-y-4" >
-
+          <form onSubmit={handleSubmit} className="space-y-4">
             {serverError && (
               <div className="bg-red-500/10 border border-red-500 text-red-400 p-2 rounded mb-4 text-sm">
                 {serverError}
               </div>
             )}
-            
+
             {/* First Name */}
             <div>
-              <label htmlFor="firstName" className="block text-sm text-gray-400 mb-1">
+              <label
+                htmlFor="firstName"
+                className="block text-sm text-gray-400 mb-1"
+              >
                 Nombre
               </label>
-              <input onChange={handleChange}
+
+              <input
+                onChange={handleChange}
                 onBlur={handleBlur}
                 id="firstName"
                 type="text"
@@ -217,17 +283,16 @@ export default function RegisterForm() {
                 placeholder="Juan"
                 maxLength={50}
                 className={`w-full bg-gray-700 border rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-1
-                ${
-                  touched.firstName && errors.firstName
-                    ? "border-red-400 focus:border-blue-500 focus:ring-blue-500"
-                    : "border-gray-600 focus:border-blue-500 focus:ring-blue-500"
-                }`
-              }
+                  ${
+                    touched.firstName && errors.firstName
+                      ? "border-red-400 focus:border-blue-500 focus:ring-blue-500"
+                      : "border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                  }`}
               />
 
               {touched.firstName && errors.firstName && (
                 <p className="text-gray-400 text-sm flex items-center gap-1 mt-1">
-                  <IoIosCloseCircleOutline className="text-base"/>
+                  <IoIosCloseCircleOutline className="text-base" />
                   {errors.firstName}
                 </p>
               )}
@@ -235,10 +300,15 @@ export default function RegisterForm() {
 
             {/* Last Name */}
             <div>
-              <label htmlFor="lastName" className="block text-sm text-gray-400 mb-1">
+              <label
+                htmlFor="lastName"
+                className="block text-sm text-gray-400 mb-1"
+              >
                 Apellido
               </label>
-              <input onChange={handleChange}
+
+              <input
+                onChange={handleChange}
                 onBlur={handleBlur}
                 id="lastName"
                 type="text"
@@ -251,13 +321,12 @@ export default function RegisterForm() {
                     touched.lastName && errors.lastName
                       ? "border-red-400 focus:border-blue-500 focus:ring-blue-500"
                       : "border-gray-600 focus:border-blue-500 focus:ring-blue-500"
-                  }`
-                }
+                  }`}
               />
 
               {touched.lastName && errors.lastName && (
                 <p className="text-gray-400 text-sm flex items-center gap-1 mt-1">
-                  <IoIosCloseCircleOutline className="text-base"/>
+                  <IoIosCloseCircleOutline className="text-base" />
                   {errors.lastName}
                 </p>
               )}
@@ -265,10 +334,15 @@ export default function RegisterForm() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email"  className="block text-sm text-gray-400 mb-1">
+              <label
+                htmlFor="email"
+                className="block text-sm text-gray-400 mb-1"
+              >
                 Correo
               </label>
-              <input onChange={handleChange}
+
+              <input
+                onChange={handleChange}
                 onBlur={handleBlur}
                 id="email"
                 type="email"
@@ -282,12 +356,12 @@ export default function RegisterForm() {
                     touched.email && errors.email
                       ? "border-red-400 focus:border-blue-500 focus:ring-blue-500"
                       : "border-gray-600 focus:border-blue-500 focus:ring-blue-500"
-                  }`
-                }
+                  }`}
               />
+
               {touched.email && errors.email && (
                 <p className="text-gray-400 text-sm flex items-center gap-1 mt-1">
-                  <IoIosCloseCircleOutline className="text-base"/>
+                  <IoIosCloseCircleOutline className="text-base" />
                   {errors.email}
                 </p>
               )}
@@ -295,10 +369,15 @@ export default function RegisterForm() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm text-gray-400 mb-1">
+              <label
+                htmlFor="password"
+                className="block text-sm text-gray-400 mb-1"
+              >
                 Contraseña
               </label>
-              <input onChange={handleChange}
+
+              <input
+                onChange={handleChange}
                 onBlur={handleBlur}
                 id="password"
                 type="password"
@@ -312,13 +391,12 @@ export default function RegisterForm() {
                     touched.password && errors.password
                       ? "border-red-400 focus:border-blue-500 focus:ring-blue-500"
                       : "border-gray-600 focus:border-blue-500 focus:ring-blue-500"
-                  }`
-                }
+                  }`}
               />
 
               {touched.password && errors.password && (
                 <p className="text-gray-400 text-sm flex items-center gap-1 mt-1">
-                  <IoIosCloseCircleOutline className="text-base"/>
+                  <IoIosCloseCircleOutline className="text-base" />
                   {errors.password}
                 </p>
               )}
@@ -326,20 +404,26 @@ export default function RegisterForm() {
 
             {/* Submit */}
             <button
-              disabled={ isSubmitDisabled }
+              disabled={isSubmitDisabled}
               type="submit"
               className="flex justify-center w-full bg-blue-600 text-white py-2 rounded-md font-semibold transition
                 hover:bg-blue-500 cursor-pointer
                 disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-              {isSending ? <div className="loader "></div> : 'Crear cuenta' }
+            >
+              {isSending ? (
+                <div className="loader" />
+              ) : (
+                "Crear cuenta"
+              )}
             </button>
           </form>
 
-          {/* FOOTER */}
           <p className="text-gray-400 text-sm text-center mt-6">
-            ¿Ya tienes cuenta?{' '}
-            <Link to="/auth/login" className="text-blue-400 hover:underline">
+            ¿Ya tienes cuenta?{" "}
+            <Link
+              to="/auth/login"
+              className="text-blue-400 hover:underline"
+            >
               Inicia sesión
             </Link>
           </p>

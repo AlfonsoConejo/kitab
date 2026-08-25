@@ -1,7 +1,7 @@
 import NoActivePeriodMessage from "@/components/NoActivePeriodMessage";
 import EmptySection from "@/components/EmptySection";
 import { apiFetch } from "@/services/apiFetch";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { notify } from "@/notify";
 import { usePeriod } from "@/context/PeriodContext";
@@ -10,14 +10,20 @@ import { formatDate, getClassDays } from "@/functions";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "@/components/ConfirmModal";
 import SectionLoader from "@/components/SectionLoader";
+import type { Class, GetClassesByPeriodResponse } from "@/types/class";
+import type { Subject, GetSubjectsByPeriodResponse } from "@/types/subject";
+
+type SubjectWithClasses = Subject & {
+  classes: Class[];
+};
 
 export default function Subjects() {
   const navigate = useNavigate();
 
   const { selectedPeriod } = usePeriod();
-  const [subjectToDelete, setSubjectToDelete] = useState(null);
-  const [subjects, setSubjects] = useState([]);
-  const [classes, setClasses] = useState([]);
+  const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Set the document title
@@ -34,36 +40,52 @@ export default function Subjects() {
       return;
     }
 
+    const periodId = selectedPeriod.id;
+
     async function fetchData() {
       try {
         setIsLoading(true);
 
         // Fetch subjects
         const subjectsRes = await apiFetch(
-          `/api/periods/${selectedPeriod.id}/subjects`
+          `/api/periods/${periodId}/subjects`
         );
 
         if (!subjectsRes.ok) {
           throw new Error("SUBJECTS_ERROR");
         }
 
-        const subjectsData = await subjectsRes.json();
+        const subjectsData: GetSubjectsByPeriodResponse =
+          await subjectsRes.json();
 
-        // Fetch classes
+        if (!subjectsData.success) {
+          throw new Error("SUBJECTS_ERROR");
+        }
+
         const classesRes = await apiFetch(
-          `/api/periods/${selectedPeriod.id}/classes`
+          `/api/periods/${periodId}/classes`
         );
 
         if (!classesRes.ok) {
           throw new Error("CLASSES_ERROR");
         }
 
-        const classesData = await classesRes.json();
+        const classesData: GetClassesByPeriodResponse =
+          await classesRes.json();
 
-        setSubjects(subjectsData.data || []);
-        setClasses(classesData.data || []);
+        if (!classesData.success) {
+          throw new Error("CLASSES_ERROR");
+        }
+
+        setSubjects(subjectsData.data);
+        setClasses(classesData.data);
 
       } catch (error) {
+        if (!(error instanceof Error)) {
+          notify("error", "Error de conexión.");
+          return;
+        }
+
         if (error.message === "SUBJECTS_ERROR") {
           notify("error", "No se pudieron cargar las materias.");
         } else if (error.message === "CLASSES_ERROR") {
@@ -80,14 +102,19 @@ export default function Subjects() {
   }, [selectedPeriod?.id]);
 
   // Combine subjects with their classes
-  const subjectsWithClasses = useMemo(() => {
-    const classesBySubject = classes.reduce((acc, cls) => {
-      if (!acc[cls.subjectId]) {
-        acc[cls.subjectId] = [];
-      }
-      acc[cls.subjectId].push(cls);
-      return acc;
-    }, {});
+  const subjectsWithClasses = useMemo<SubjectWithClasses[]>(() => {
+    const classesBySubject = classes.reduce<Record<number, Class[]>>(
+      (acc, cls) => {
+        if (!acc[cls.subjectId]) {
+          acc[cls.subjectId] = [];
+        }
+
+        acc[cls.subjectId].push(cls);
+
+        return acc;
+      },
+      {}
+    );
 
     return subjects.map((subject) => ({
       ...subject,
@@ -95,7 +122,7 @@ export default function Subjects() {
     }));
   }, [subjects, classes]);
 
-  const handleEdit = (subject) => {
+  const handleEdit = (subject: Subject) => {
     navigate(`/app/subjects/${subject.id}/edit`, {
       state: {
         from: `/app/subjects`,
@@ -103,7 +130,7 @@ export default function Subjects() {
     });
   };
 
-  async function handleDeletedSubject(subject) {
+  async function handleDeletedSubject(subject: Subject) {
     try {
       const res = await apiFetch(`/api/subjects/${subject.id}`, {
         method: "DELETE",
@@ -123,7 +150,7 @@ export default function Subjects() {
   }
 
   // Render content based on state
-  let content;
+  let content: ReactNode;
   if (isLoading) {
     content = <SectionLoader />;
   } else if (!selectedPeriod) {
@@ -181,8 +208,14 @@ export default function Subjects() {
   );
 }
 
+type SubjectsGridProps = {
+  subjects: SubjectWithClasses[];
+  onDelete: (subject: Subject) => void;
+  onEdit: (subject: Subject) => void;
+};
+
 /** Grid of subject cards */
-function SubjectsGrid({ subjects, onDelete, onEdit }) {
+function SubjectsGrid({ subjects, onDelete, onEdit }: SubjectsGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {subjects.map((subject) => (
@@ -197,8 +230,14 @@ function SubjectsGrid({ subjects, onDelete, onEdit }) {
   );
 }
 
+type SubjectCardProps = {
+  subject: SubjectWithClasses;
+  onDelete: (subject: Subject) => void;
+  onEdit: (subject: Subject) => void;
+};
+
 /* Class card */
-function SubjectCard({ subject, onDelete, onEdit }) {
+function SubjectCard({ subject, onDelete, onEdit }: SubjectCardProps) {
   const classDays = getClassDays(subject.classes);
   
   return (
@@ -218,14 +257,14 @@ function SubjectCard({ subject, onDelete, onEdit }) {
         {/* Actions*/}
         <div className="flex items-center gap-1 shrink-0">
           <button
-            onClick={() => onEdit?.(subject)}
+            onClick={() => onEdit(subject)}
             className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
             title="Editar materia"
           >
             <Pencil size={16} />
           </button>
           <button
-            onClick={() => onDelete?.(subject)}
+            onClick={() => onDelete(subject)}
             className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
             title="Eliminar materia"
           >
