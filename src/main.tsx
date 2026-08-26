@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { Toaster } from 'sonner'
+import { Toaster } from "./components/ui/sonner";
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom';
 import './index.css'
