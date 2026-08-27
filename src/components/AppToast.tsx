@@ -30,6 +30,7 @@ type AppToastProps = {
 }
 
 export function AppToast({ type, message }: AppToastProps) {
+  
   const { icon: Icon, iconColor } = config[type];
 
   return (
@@ -37,7 +38,7 @@ export function AppToast({ type, message }: AppToastProps) {
       className={`flex items-start gap-3 text-xs rounded-md bg-slate-700 px-3 py-3 min-w-3xs`}
     >
       <div className={`mt-0.5 ${iconColor}`}>
-        <Icon size={16} />
+        <Icon data-testid={`toast-icon`} size={16} />
       </div>
 
       <p className="text-slate-300 leading-snug">
