@@ -5,6 +5,7 @@ import { useClickOutside } from '@/customHooks/useClickOutside';
 import avatarColors from '@/data/avatarColors';
 import type { User } from '@/types/user';
 import { useAuth } from '@/customHooks/useAuth';
+import { Menu } from 'lucide-react';
 
 interface MenuItem {
   label: string;
@@ -12,9 +13,10 @@ interface MenuItem {
 }
 interface AppHeaderProps {
   user: User;
+  onOpenMobileMenu: () => void;
 }
 
-export default function AppHeader({user}: AppHeaderProps) {
+export default function AppHeader({user, onOpenMobileMenu}: AppHeaderProps) {
 
   const { logoutUser } = useAuth();
   const navigate = useNavigate();
@@ -55,10 +57,20 @@ export default function AppHeader({user}: AppHeaderProps) {
       <nav className=" border-gray-200 px-4 lg:px-6 py-2.5 bg-gray-800">
         <div className="flex flex-wrap justify-between items-center mx-auto max-w-7x1">
           {/* Logo */}
-          <Link to="/app/dashboard" className="flex items-center">
-            <img src="/logo-azul.png" className="mr-3 h-7 sm:h-8" alt="Kitab logo" />
-            <span className="self-center text-xl font-semibold whitespace-nowrap text-white logo translate-y-0.5">Kitab</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onOpenMobileMenu}
+              className="rounded-lg p-2 text-white hover:bg-gray-700 cursor-pointer md:hidden"
+              aria-label="Abrir menú de navegación"
+            >
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <Link to="/app/dashboard" className="flex items-center">
+              <img src="/logo-azul.png" className="mr-3 h-7 sm:h-8" alt="Kitab logo" />
+              <span className="self-center text-xl font-semibold whitespace-nowrap text-white logo translate-y-0.5">Kitab</span>
+            </Link>
+          </div>
           
           <div className='relative text-white' ref={avatarRef}>
             <div
