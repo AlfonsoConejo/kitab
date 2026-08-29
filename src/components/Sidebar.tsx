@@ -1,6 +1,7 @@
 import {
   BookOpen,
   CalendarDays,
+  Calendar,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -121,7 +122,7 @@ function SidebarContent({
                 backgroundColor: selectedPeriod?.id ? selectedPeriod.color : "",
               }}
             >
-              {!mobile && <CalendarDays className="h-5 w-5" aria-hidden="true" />}
+              {!mobile && <Calendar className="h-5 w-5" aria-hidden="true" />}
               <span className={mobile ? "ml-1 truncate text-xs" : compact ? "hidden" : "hidden ml-3 truncate text-xs lg:block"}>
                 {selectedPeriod?.name || "Sin periodo seleccionado"}
               </span>

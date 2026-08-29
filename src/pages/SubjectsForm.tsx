@@ -249,8 +249,10 @@ export default function SubjectsForm() {
         startDate: selectedPeriod.startDate,
         endDate: selectedPeriod.endDate,
       }));
+
+      setIsManualDate(false);
     }
-  }, [isEditMode, selectedPeriod])
+  }, [isEditMode, selectedPeriod]);
 
   // If user is editing a subject check if period dates and subject dates are the same
   useEffect(() => {
