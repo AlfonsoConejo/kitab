@@ -622,7 +622,7 @@ export default function SubjectsForm() {
           : "Materia creada correctamente"
       );
 
-      navigate("/app/subjects");
+      navigate(location.state?.from || "/app/subjects");
     } catch (err) {
       console.error("Error al guardar:", err);
       notify("error", "No fue posible conectar con el servidor.");
