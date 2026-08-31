@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState, useRef } from "react";
 import type { AuthContextType, User, GetMeResponse, AuthProviderProps } from "@/types/user";
+import { apiFetch } from "@/services/apiFetch";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -37,12 +38,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const checkAuth = async () => {
       try {
-        // FIRST AUTH CHECK
-        let resMe = await fetch(`${API_URL}/api/auth/me`, {
-          credentials: "include"
-        });
+        const resMe = await apiFetch("/api/auth/me");
 
-        // ACCESS TOKEN VALID
         if (resMe.ok) {
           const dataMe: GetMeResponse = await resMe.json();
 
@@ -53,38 +50,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             setUser(null);
           }
         } else {
-
-          // ACCESS TOKEN EXPIRED -> REFRESH
-          const resRefresh = await fetch(`${API_URL}/api/auth/refresh`, {
-            method: "POST",
-            credentials: "include"
-          });
-
-          // REFRESH FAILED
-          if (!resRefresh.ok) {
-            await logoutUser();
-            return;
-          }
-
-          // TRY /ME AGAIN
-          resMe = await fetch(`${API_URL}/api/auth/me`, {
-            credentials: "include"
-          });
-
-          // SECOND /ME FAILED
-          if (!resMe.ok) {
-            await logoutUser();
-            return;
-          }
-
-          const dataMe: GetMeResponse = await resMe.json();
-          
-          if (dataMe.success) {
-            setUser(dataMe.data.user);
-          } else {
-            console.error(dataMe.message);
-            setUser(null);
-          }
+          setUser(null);
         }
       } catch (error) {
         console.error(error);
