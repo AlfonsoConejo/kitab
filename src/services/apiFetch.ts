@@ -33,12 +33,9 @@ export const apiFetch = async (
     const refreshed = await refreshAccessToken();
 
     if (!refreshed) {
-      window.location.href = "/auth/login";
       throw new Error("SESSION_EXPIRED");
     }
 
-    // Retry only once. A second 401 is returned to the caller and never
-    // causes another refresh cycle.
     response = await fetch(`${API_URL}${url}`, {
       ...options,
       credentials: "include",
