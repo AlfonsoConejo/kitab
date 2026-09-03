@@ -5,7 +5,7 @@ export interface User {
   email: string;
   fullName: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
 }
 
 export interface GetMeSuccessResponse {
