@@ -1,5 +1,9 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
+const notifySessionExpired = () => {
+  window.dispatchEvent(new Event("kitab:session-expired"));
+};
+
 // All requests that receive a 401 share the same refresh operation. This
 // prevents concurrent requests from rotating the same refresh token twice.
 let refreshPromise: Promise<boolean> | null = null;
@@ -33,6 +37,7 @@ export const apiFetch = async (
     const refreshed = await refreshAccessToken();
 
     if (!refreshed) {
+      notifySessionExpired();
       throw new Error("SESSION_EXPIRED");
     }
 
@@ -40,6 +45,11 @@ export const apiFetch = async (
       ...options,
       credentials: "include",
     });
+
+    if (response.status === 401) {
+      notifySessionExpired();
+      throw new Error("SESSION_EXPIRED");
+    }
   }
 
   return response;

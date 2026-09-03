@@ -13,6 +13,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setUser(null);
+    };
+
+    window.addEventListener("kitab:session-expired", handleSessionExpired);
+
+    return () => {
+      window.removeEventListener("kitab:session-expired", handleSessionExpired);
+    };
+  }, []);
+
   const logoutUser = async (): Promise<void> => {
     try {
       const res = await fetch(`${API_URL}/api/auth/logout`, {

@@ -226,7 +226,7 @@ export default function RegisterForm() {
         return;
       }
 
-      setUser(meData.user);
+      setUser(meData.data.user);
       navigate("/app/dashboard");
     } catch (error) {
       setServerError("Error en el servidor");
