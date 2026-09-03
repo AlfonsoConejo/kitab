@@ -48,6 +48,7 @@ export default function App() {
 
         {/* Auth */}
         <Route path="/auth" element={<AuthLayout />}>
+          <Route index element={<Navigate to="login" replace />} />
           <Route 
             path="login" 
             element={
@@ -60,6 +61,7 @@ export default function App() {
               user ? <Navigate to="/app/dashboard" replace /> : <Register />
             } 
           />
+          <Route path="*" element={<Navigate to="/auth/login" replace />} />
         </Route>
 
 
@@ -87,10 +89,11 @@ export default function App() {
             <Route path="tasks" element={<Tasks />} />
             <Route path="tests" element={<Tests />} />
             <Route path="breaks" element={<Breaks />} />
+            <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
 
           </Route>
-|
         </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

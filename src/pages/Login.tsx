@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from "react";
 import {useAuth} from  '../customHooks/useAuth' 
+import { API_URL } from "@/services/apiUrl";
 
 
 export default function LoginForm() {
@@ -11,8 +12,6 @@ export default function LoginForm() {
   const from = location.state?.from?.pathname || "/app/dashboard";
 
   const { setUser } = useAuth();
-  const API_URL = import.meta.env.VITE_API_URL;
-
   interface LoginFormData {
     email: string;
     password: string;

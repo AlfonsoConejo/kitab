@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { useState, useEffect, type ChangeEvent, type FocusEvent } from "react";
 import { useAuth } from "../customHooks/useAuth";
+import { API_URL } from "@/services/apiUrl";
 import "./../App.css";
 
 type RegisterFormData = {
@@ -30,8 +31,6 @@ type RegisterField = keyof RegisterFormData;
 export default function RegisterForm() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
-
-  const API_URL = import.meta.env.VITE_API_URL;
 
   const [formData, setFormData] = useState<RegisterFormData>({
     firstName: "",

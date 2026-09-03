@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL;
+import { API_URL } from "@/services/apiUrl";
 const REFRESH_LOCK_NAME = "kitab-auth-refresh";
 const REFRESH_LOCK_STORAGE_KEY = "kitab-auth-refresh-lock";
 const REFRESH_LOCK_TTL_MS = 10_000;

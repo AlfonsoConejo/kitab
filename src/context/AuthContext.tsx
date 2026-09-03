@@ -1,14 +1,13 @@
 import { createContext, useEffect, useState, useRef } from "react";
 import type { AuthContextType, User, GetMeResponse, AuthProviderProps } from "@/types/user";
 import { apiFetch } from "@/services/apiFetch";
+import { API_URL } from "@/services/apiUrl";
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const didCheckAuth = useRef(false);
-
-  const API_URL = import.meta.env.VITE_API_URL;
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
