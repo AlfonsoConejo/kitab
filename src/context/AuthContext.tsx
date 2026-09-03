@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, []);
 
-  const logoutUser = async (): Promise<void> => {
+  const logoutUser = async (): Promise<boolean> => {
     try {
       const res = await fetch(`${API_URL}/api/auth/logout`, {
         method: "POST",
@@ -33,13 +33,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (!res.ok) {
-        throw new Error("LOGOUT_FAILED");
+        return false;
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
+
       setUser(null);
+      return true;
+    } catch {
+      return false;
     }
+  };
+
+  const logoutLocally = (): void => {
+    setUser(null);
   };
   
   useEffect(() => {
@@ -81,7 +86,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         user,
         setUser,
         authLoading,
-        logoutUser
+        logoutUser,
+        logoutLocally,
       }}
     >
       {children}

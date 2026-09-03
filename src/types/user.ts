@@ -26,7 +26,8 @@ export interface AuthContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   authLoading: boolean;
-  logoutUser: () => Promise<void>;
+  logoutUser: () => Promise<boolean>;
+  logoutLocally: () => void;
 }
 
 export interface AuthProviderProps {

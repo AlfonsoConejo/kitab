@@ -18,11 +18,12 @@ interface AppHeaderProps {
 
 export default function AppHeader({user, onOpenMobileMenu}: AppHeaderProps) {
 
-  const { logoutUser } = useAuth();
+  const { logoutUser, logoutLocally } = useAuth();
   const navigate = useNavigate();
   
   const avatarRef = useRef<HTMLDivElement | null>(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [canLogoutLocally, setCanLogoutLocally] = useState(false);
   useClickOutside(avatarRef, () => setIsProfileMenuOpen(false));
 
   // Create avatar icon
@@ -36,8 +37,20 @@ export default function AppHeader({user, onOpenMobileMenu}: AppHeaderProps) {
 
 
   const handleLogOut = async () => {
-    await logoutUser();
+    setCanLogoutLocally(false);
+    const didLogout = await logoutUser();
+
+    if (!didLogout) {
+      setCanLogoutLocally(true);
+      notify("error", "No se pudo cerrar la sesión. Inténtalo de nuevo o sal localmente.");
+      return;
+    }
     notify("success", "Sesión cerrada.");
+  };
+
+  const handleLocalLogout = () => {
+    logoutLocally();
+    notify("warning", "Saliste localmente. La sesión podría seguir activa en el servidor.");
   };
 
   //Array of Avatar button options
@@ -51,6 +64,13 @@ export default function AppHeader({user, onOpenMobileMenu}: AppHeaderProps) {
     action: handleLogOut,
   },
 ];
+
+  if (canLogoutLocally) {
+    menuItems.push({
+      label: "Salir localmente",
+      action: handleLocalLogout,
+    });
+  }
 
   return(
     <header>
