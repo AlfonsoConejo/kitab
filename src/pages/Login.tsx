@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from "react";
 import {useAuth} from  '../customHooks/useAuth' 
 import { API_URL } from "@/services/apiUrl";
+import { apiFetch } from "@/services/apiFetch";
 
 
 export default function LoginForm() {
@@ -119,9 +120,7 @@ export default function LoginForm() {
         return;
       }
 
-      const meRes = await fetch(`${API_URL}/api/auth/me`, {
-        credentials: "include"
-      });
+      const meRes = await apiFetch("/api/auth/me");
 
       const meData = await meRes.json();
       
