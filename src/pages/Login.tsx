@@ -2,7 +2,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from "react";
 import {useAuth} from  '../customHooks/useAuth' 
 import { API_URL } from "@/services/apiUrl";
-import { apiFetch, notifyOtherTabsOfLogin } from "@/services/apiFetch";
+import { notifyOtherTabsOfLogin } from "@/services/apiFetch";
+import type { LoginResponse } from "@/types/user";
 
 
 export default function LoginForm() {
@@ -113,23 +114,19 @@ export default function LoginForm() {
         credentials: "include"
       });
 
-      const loginData = await res.json();
+      const loginData: LoginResponse = await res.json();
 
-      if (!res.ok) {
+      if (!loginData.success) {
         setServerError(loginData.message || "Usuario o contraseña incorrectos");
         return;
       }
 
-      const meRes = await apiFetch("/api/auth/me");
-
-      const meData = await meRes.json();
-      
-      if (!meRes.ok) {
-        setServerError(meData.message || "Usuario o contraseña incorrectos");
+      if (!res.ok) {
+        setServerError("Usuario o contraseña incorrectos");
         return;
       }
 
-      setUser(meData.data.user);
+      setUser(loginData.data.user);
       notifyOtherTabsOfLogin();
       navigate(from, { replace: true });
 

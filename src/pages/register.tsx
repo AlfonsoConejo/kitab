@@ -3,7 +3,8 @@ import { IoIosCloseCircleOutline } from "react-icons/io";
 import { useState, useEffect, type ChangeEvent, type FocusEvent } from "react";
 import { useAuth } from "../customHooks/useAuth";
 import { API_URL } from "@/services/apiUrl";
-import { apiFetch, notifyOtherTabsOfLogin } from "@/services/apiFetch";
+import { notifyOtherTabsOfLogin } from "@/services/apiFetch";
+import type { LoginResponse } from "@/types/user";
 import "./../App.css";
 
 type RegisterFormData = {
@@ -204,27 +205,21 @@ export default function RegisterForm() {
         credentials: "include",
       });
 
-      const loginData = await resLogin.json();
+      const loginData: LoginResponse = await resLogin.json();
 
-      if (!resLogin.ok) {
+      if (!loginData.success) {
         setServerError(
           loginData.message || "Usuario o contraseña incorrectos"
         );
         return;
       }
 
-      const meRes = await apiFetch("/api/auth/me");
-
-      const meData = await meRes.json();
-
-      if (!meRes.ok) {
-        setServerError(
-          meData.message || "Usuario o contraseña incorrectos"
-        );
+      if (!resLogin.ok) {
+        setServerError("Usuario o contraseña incorrectos");
         return;
       }
 
-      setUser(meData.data.user);
+      setUser(loginData.data.user);
       notifyOtherTabsOfLogin();
       navigate("/app/dashboard");
     } catch (error) {

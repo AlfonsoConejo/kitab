@@ -22,6 +22,20 @@ export interface GetMeErrorResponse {
 
 export type GetMeResponse = GetMeSuccessResponse | GetMeErrorResponse;
 
+export interface LoginSuccessResponse {
+  success: true;
+  data: {
+    user: User;
+  };
+}
+
+export interface LoginErrorResponse {
+  success: false;
+  message: string;
+}
+
+export type LoginResponse = LoginSuccessResponse | LoginErrorResponse;
+
 export interface AuthContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
