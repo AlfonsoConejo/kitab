@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from "react";
 import {useAuth} from  '../customHooks/useAuth' 
 import { API_URL } from "@/services/apiUrl";
-import { apiFetch } from "@/services/apiFetch";
+import { apiFetch, notifyOtherTabsOfLogin } from "@/services/apiFetch";
 
 
 export default function LoginForm() {
@@ -130,6 +130,7 @@ export default function LoginForm() {
       }
 
       setUser(meData.data.user);
+      notifyOtherTabsOfLogin();
       navigate(from, { replace: true });
 
     } catch (error) {

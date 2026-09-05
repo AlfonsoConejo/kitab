@@ -9,10 +9,17 @@ type RefreshLock = {
   expiresAt: number;
 };
 
-type RefreshChannelMessage = {
-  type: "refresh-result";
-  success: boolean;
-};
+type AuthChannelMessage =
+  | {
+      type: "refresh-result";
+      success: boolean;
+    }
+  | {
+      type: "logout";
+    }
+  | {
+      type: "login";
+    };
 
 const notifySessionExpired = () => {
   window.dispatchEvent(new Event("kitab:session-expired"));
@@ -27,12 +34,28 @@ const refreshChannel =
 
 refreshChannel?.addEventListener(
   "message",
-  (event: MessageEvent<RefreshChannelMessage>) => {
+  (event: MessageEvent<AuthChannelMessage>) => {
     if (event.data?.type === "refresh-result" && !event.data.success) {
       notifySessionExpired();
     }
+
+    if (event.data?.type === "logout") {
+      window.dispatchEvent(new Event("kitab:remote-logout"));
+    }
+
+    if (event.data?.type === "login") {
+      window.dispatchEvent(new Event("kitab:remote-login"));
+    }
   },
 );
+
+export const notifyOtherTabsOfLogout = (): void => {
+  refreshChannel?.postMessage({ type: "logout" });
+};
+
+export const notifyOtherTabsOfLogin = (): void => {
+  refreshChannel?.postMessage({ type: "login" });
+};
 
 const wait = (duration: number): Promise<void> =>
   new Promise((resolve) => window.setTimeout(resolve, duration));

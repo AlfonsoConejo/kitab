@@ -3,7 +3,7 @@ import { IoIosCloseCircleOutline } from "react-icons/io";
 import { useState, useEffect, type ChangeEvent, type FocusEvent } from "react";
 import { useAuth } from "../customHooks/useAuth";
 import { API_URL } from "@/services/apiUrl";
-import { apiFetch } from "@/services/apiFetch";
+import { apiFetch, notifyOtherTabsOfLogin } from "@/services/apiFetch";
 import "./../App.css";
 
 type RegisterFormData = {
@@ -225,6 +225,7 @@ export default function RegisterForm() {
       }
 
       setUser(meData.data.user);
+      notifyOtherTabsOfLogin();
       navigate("/app/dashboard");
     } catch (error) {
       setServerError("Error en el servidor");
