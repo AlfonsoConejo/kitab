@@ -13,7 +13,7 @@ export default function AuthUnavailable({ onRetry }: AuthUnavailableProps) {
         <button
           type="button"
           onClick={() => void onRetry()}
-          className="mt-6 rounded-md bg-blue-600 px-4 py-2 font-medium hover:bg-blue-500"
+          className="mt-6 rounded-md bg-blue-600 px-4 py-2 font-medium hover:bg-blue-500 cursor-pointer"
         >
           Reintentar
         </button>

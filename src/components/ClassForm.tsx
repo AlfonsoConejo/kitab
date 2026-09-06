@@ -292,7 +292,9 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
             </div>
           )
         }
+      </div>
 
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Start time */}
         <div className="flex flex-col gap-2">
           <label className="mb-2 text-sm font-medium text-white">
@@ -350,11 +352,7 @@ const ClassForm = ({ classData, isEditMode, isNew, conflicts, conflictCount, isR
             "
           />
         </div>
-
-        
-
       </div>
-
 
       {
         hasSchedule && (

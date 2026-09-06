@@ -41,7 +41,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => void retryAuth()}
-            className="ml-3 font-semibold underline"
+            className="ml-3 font-semibold underline cursor-pointer"
           >
             Reintentar
           </button>
