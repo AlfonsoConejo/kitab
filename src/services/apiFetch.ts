@@ -12,7 +12,7 @@ type RefreshLock = {
 type AuthChannelMessage =
   | {
       type: "refresh-result";
-      success: boolean;
+      outcome: RefreshOutcome;
     }
   | {
       type: "logout";
@@ -25,6 +25,13 @@ const notifySessionExpired = () => {
   window.dispatchEvent(new Event("kitab:session-expired"));
 };
 
+const notifyAuthUnavailable = () => {
+  window.dispatchEvent(new Event("kitab:auth-unavailable"));
+};
+
+type RefreshOutcome = "refreshed" | "invalid" | "unavailable";
+type AccessTokenStatus = "valid" | "invalid" | "unavailable";
+
 const tabId = crypto.randomUUID();
 
 const refreshChannel =
@@ -35,8 +42,14 @@ const refreshChannel =
 refreshChannel?.addEventListener(
   "message",
   (event: MessageEvent<AuthChannelMessage>) => {
-    if (event.data?.type === "refresh-result" && !event.data.success) {
-      notifySessionExpired();
+    if (event.data?.type === "refresh-result") {
+      if (event.data.outcome === "invalid") {
+        notifySessionExpired();
+      }
+
+      if (event.data.outcome === "unavailable") {
+        notifyAuthUnavailable();
+      }
     }
 
     if (event.data?.type === "logout") {
@@ -118,45 +131,61 @@ const withRefreshLock = async <T>(
   return withLocalStorageLock(callback);
 };
 
-const hasValidAccessToken = async (): Promise<boolean> => {
+const hasValidAccessToken = async (): Promise<AccessTokenStatus> => {
   try {
     const response = await fetch(`${API_URL}/api/auth/me`, {
       credentials: "include",
     });
 
-    return response.ok;
+    if (response.ok) return "valid";
+    if (response.status === 401) return "invalid";
+
+    return "unavailable";
   } catch {
-    return false;
+    return "unavailable";
   }
 };
 
 // All requests that receive a 401 share the same refresh operation. This
 // prevents concurrent requests from rotating the same refresh token twice.
-let refreshPromise: Promise<boolean> | null = null;
+let refreshPromise: Promise<RefreshOutcome> | null = null;
 
-const requestRefresh = async (): Promise<boolean> => {
+const requestRefresh = async (): Promise<RefreshOutcome> => {
   try {
     const response = await fetch(`${API_URL}/api/auth/refresh`, {
       method: "POST",
       credentials: "include",
     });
 
-    return response.ok;
+    if (response.ok) return "refreshed";
+    if (response.status === 401) return "invalid";
+
+    return "unavailable";
   } catch {
-    return false;
+    return "unavailable";
   }
 };
 
-const refreshAccessToken = (): Promise<boolean> => {
+const refreshAccessToken = (): Promise<RefreshOutcome> => {
   if (!refreshPromise) {
     refreshPromise = withRefreshLock(async () => {
-      if (await hasValidAccessToken()) {
-        return true;
+      const accessTokenStatus = await hasValidAccessToken();
+
+      if (accessTokenStatus === "valid") {
+        return "refreshed";
       }
 
-      const refreshed = await requestRefresh();
-      refreshChannel?.postMessage({ type: "refresh-result", success: refreshed });
-      return refreshed;
+      if (accessTokenStatus === "unavailable") {
+        refreshChannel?.postMessage({
+          type: "refresh-result",
+          outcome: "unavailable",
+        });
+        return "unavailable";
+      }
+
+      const outcome = await requestRefresh();
+      refreshChannel?.postMessage({ type: "refresh-result", outcome });
+      return outcome;
     })
       .finally(() => {
         refreshPromise = null;
@@ -170,23 +199,40 @@ export const apiFetch = async (
   url: string,
   options: RequestInit = {}
 ): Promise<Response> => {
-  let response = await fetch(`${API_URL}${url}`, {
-    ...options,
-    credentials: "include",
-  });
+  let response: Response;
 
-  if (response.status === 401) {
-    const refreshed = await refreshAccessToken();
-
-    if (!refreshed) {
-      notifySessionExpired();
-      throw new Error("SESSION_EXPIRED");
-    }
-
+  try {
     response = await fetch(`${API_URL}${url}`, {
       ...options,
       credentials: "include",
     });
+  } catch (error) {
+    notifyAuthUnavailable();
+    throw error;
+  }
+
+  if (response.status === 401) {
+    const refreshOutcome = await refreshAccessToken();
+
+    if (refreshOutcome === "invalid") {
+      notifySessionExpired();
+      throw new Error("SESSION_EXPIRED");
+    }
+
+    if (refreshOutcome === "unavailable") {
+      notifyAuthUnavailable();
+      throw new Error("AUTH_SERVICE_UNAVAILABLE");
+    }
+
+    try {
+      response = await fetch(`${API_URL}${url}`, {
+        ...options,
+        credentials: "include",
+      });
+    } catch (error) {
+      notifyAuthUnavailable();
+      throw error;
+    }
 
     if (response.status === 401) {
       notifySessionExpired();

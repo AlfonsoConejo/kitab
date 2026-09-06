@@ -36,10 +36,18 @@ export interface LoginErrorResponse {
 
 export type LoginResponse = LoginSuccessResponse | LoginErrorResponse;
 
+export type AuthStatus =
+  | "loading"
+  | "authenticated"
+  | "unauthenticated"
+  | "unavailable";
+
 export interface AuthContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   authLoading: boolean;
+  authStatus: AuthStatus;
+  retryAuth: () => Promise<void>;
   logoutUser: () => Promise<boolean>;
   logoutLocally: () => void;
 }

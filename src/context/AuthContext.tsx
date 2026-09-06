@@ -1,5 +1,5 @@
-import { createContext, useEffect, useState, useRef } from "react";
-import type { AuthContextType, User, GetMeResponse, AuthProviderProps } from "@/types/user";
+import { createContext, useCallback, useEffect, useState, useRef } from "react";
+import type { AuthContextType, AuthStatus, User, GetMeResponse, AuthProviderProps } from "@/types/user";
 import { apiFetch, notifyOtherTabsOfLogout } from "@/services/apiFetch";
 import { API_URL } from "@/services/apiUrl";
 
@@ -12,60 +12,100 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>("loading");
+
+  useEffect(() => {
+    if (user) {
+      setAuthStatus("authenticated");
+    }
+  }, [user]);
+
+  const checkAuth = useCallback(async () => {
+    const checkVersion = sessionVersion.current;
+
+    try {
+      const resMe = await apiFetch("/api/auth/me");
+
+      if (resMe.ok) {
+        const dataMe: GetMeResponse = await resMe.json();
+
+        if (sessionVersion.current !== checkVersion) {
+          return;
+        }
+
+        if (dataMe.success) {
+          setUser(dataMe.data.user);
+          setAuthStatus("authenticated");
+        } else {
+          setUser(null);
+          setAuthStatus("unauthenticated");
+        }
+      } else if (sessionVersion.current === checkVersion) {
+        if (resMe.status === 401) {
+          setUser(null);
+          setAuthStatus("unauthenticated");
+        } else {
+          setAuthStatus("unavailable");
+        }
+      }
+    } catch (error) {
+      console.error(error);
+
+      if (sessionVersion.current !== checkVersion) {
+        return;
+      }
+
+      if (error instanceof Error && error.message === "SESSION_EXPIRED") {
+        setUser(null);
+        setAuthStatus("unauthenticated");
+      } else {
+        setAuthStatus("unavailable");
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
+
+  const retryAuth = useCallback(async () => {
+    setAuthLoading(true);
+    await checkAuth();
+  }, [checkAuth]);
 
   useEffect(() => {
     const handleSessionExpired = () => {
       sessionVersion.current += 1;
       setUser(null);
+      setAuthStatus("unauthenticated");
     };
 
     const handleRemoteLogout = () => {
       sessionVersion.current += 1;
       setUser(null);
+      setAuthStatus("unauthenticated");
+    };
+
+    const handleAuthUnavailable = () => {
+      setAuthStatus("unavailable");
     };
 
     const handleRemoteLogin = () => {
-      const loginVersion = sessionVersion.current + 1;
-      sessionVersion.current = loginVersion;
+      sessionVersion.current += 1;
 
-      const synchronizeUser = async () => {
-        try {
-          const resMe = await apiFetch("/api/auth/me");
-
-          if (!resMe.ok) {
-            if (sessionVersion.current === loginVersion) {
-              setUser(null);
-            }
-            return;
-          }
-
-          const dataMe: GetMeResponse = await resMe.json();
-
-          if (sessionVersion.current === loginVersion) {
-            setUser(dataMe.success ? dataMe.data.user : null);
-          }
-        } catch (error) {
-          console.error(error);
-
-          if (sessionVersion.current === loginVersion) {
-            setUser(null);
-          }
-        }
-      };
-
-      void synchronizeUser();
+      void checkAuth();
     };
 
     window.addEventListener("kitab:session-expired", handleSessionExpired);
     window.addEventListener("kitab:remote-logout", handleRemoteLogout);
     window.addEventListener("kitab:remote-login", handleRemoteLogin);
+    window.addEventListener("kitab:auth-unavailable", handleAuthUnavailable);
 
     return () => {
       window.removeEventListener("kitab:session-expired", handleSessionExpired);
       window.removeEventListener("kitab:remote-logout", handleRemoteLogout);
       window.removeEventListener("kitab:remote-login", handleRemoteLogin);
+      window.removeEventListener("kitab:auth-unavailable", handleAuthUnavailable);
     };
-  }, []);
+  }, [checkAuth]);
 
   const logoutUser = async (): Promise<boolean> => {
     try {
@@ -80,6 +120,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       sessionVersion.current += 1;
       setUser(null);
+      setAuthStatus("unauthenticated");
       notifyOtherTabsOfLogout();
       return true;
     } catch {
@@ -90,6 +131,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logoutLocally = (): void => {
     sessionVersion.current += 1;
     setUser(null);
+    setAuthStatus("unauthenticated");
   };
   
   useEffect(() => {
@@ -98,38 +140,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     didCheckAuth.current = true;
 
-    const checkAuth = async () => {
-      const checkVersion = sessionVersion.current;
-
-      try {
-        const resMe = await apiFetch("/api/auth/me");
-
-        if (resMe.ok) {
-          const dataMe: GetMeResponse = await resMe.json();
-
-          if (dataMe.success) {
-            if (sessionVersion.current === checkVersion) {
-              setUser(dataMe.data.user);
-            }
-          } else if (sessionVersion.current === checkVersion) {
-            console.error(dataMe.message);
-            setUser(null);
-          }
-        } else if (sessionVersion.current === checkVersion) {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error(error);
-        if (sessionVersion.current === checkVersion) {
-          setUser(null);
-        }
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
+    void checkAuth();
+  }, [checkAuth]);
 
   return (
     <AuthContext.Provider
@@ -137,6 +149,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         user,
         setUser,
         authLoading,
+        authStatus,
+        retryAuth,
         logoutUser,
         logoutLocally,
       }}

@@ -21,16 +21,32 @@ import ScrollToTop from './components/ScrollToTop';
 import SubjectsForm from './pages/SubjectsForm';
 import SubjectDetails from './pages/SubjectDetails';
 import Loader from './components/Loader';
+import AuthUnavailable from './components/AuthUnavailable';
 import { useAuth } from './customHooks/useAuth';
 
 export default function App() {
-  const { user, authLoading} = useAuth();
+  const { user, authLoading, authStatus, retryAuth } = useAuth();
 
    if (authLoading) return <Loader />
+   if (authStatus === "unavailable" && !user) {
+    return <AuthUnavailable onRetry={retryAuth} />;
+   }
 
   return (
     <> 
       <ScrollToTop />
+      {authStatus === "unavailable" && user && (
+        <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-950">
+          No pudimos verificar tu sesión. Tu acceso se conservará mientras el servicio se restablece.
+          <button
+            type="button"
+            onClick={() => void retryAuth()}
+            className="ml-3 font-semibold underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
       <Routes>
 
         {/* Landing */}
