@@ -15,6 +15,7 @@ import Tasks from './pages/Tasks';
 import Tests from './pages/Tests';
 import Subjects from './pages/Subjects';
 import Breaks from './pages/Breaks';
+import BreaksForm from './pages/BreaksForm';
 import PeriodForm from './pages/PeriodForm';
 import Sprints from './pages/Sprints';
 import ScrollToTop from './components/ScrollToTop';
@@ -101,10 +102,15 @@ export default function App() {
             <Route path="subjects/:id" element={<SubjectDetails />} />
             <Route path="subjects/:id/edit" element={<SubjectsForm />} />
 
+            {/* Breaks */}
+            <Route path="breaks" element={<Breaks />} />
+            <Route path="breaks/new" element={<BreaksForm />} />
+            <Route path="breaks/:id/edit" element={<BreaksForm />} />
+
             <Route path="calendar" element={<Calendar />} />
             <Route path="tasks" element={<Tasks />} />
             <Route path="tests" element={<Tests />} />
-            <Route path="breaks" element={<Breaks />} />
+            
             <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
 
           </Route>
