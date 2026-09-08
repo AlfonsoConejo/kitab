@@ -35,7 +35,7 @@ const activityItems: NavigationItem[] = [
   { label: "Tareas", to: "/app/tasks", icon: ClipboardList },
   { label: "Exámenes", to: "/app/tests", icon: FileSpreadsheet },
   { label: "Materias", to: "/app/subjects", icon: BookOpen },
-  { label: "Vacaciones", to: "/app/breaks", icon: Parasol },
+  { label: "Descansos", to: "/app/breaks", icon: Parasol },
 ];
 
 interface SidebarContentProps {
