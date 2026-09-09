@@ -8,8 +8,9 @@ import { notify } from "@/notify";
 import { apiFetch } from "@/services/apiFetch";
 import type { DayOff, GetDaysOffByPeriodResponse } from "@/types/dayOff";
 import { Parasol, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 
 export default function Breaks() {
   const navigate = useNavigate();
@@ -17,6 +18,35 @@ export default function Breaks() {
   const [daysOff, setDaysOff] = useState<DayOff[]>([]);
   const [dayOffToDelete, setDayOffToDelete] = useState<DayOff | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const today = useMemo(() => {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const day = String(currentDate.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }, []);
+
+  const upcomingDaysOff = useMemo(
+    () => daysOff.filter((dayOff) => dayOff.startDate > today),
+    [daysOff, today],
+  );
+
+  console.log("upcomingDaysOff: ", upcomingDaysOff);
+
+  const currentDaysOff = useMemo(
+    () =>
+      daysOff.filter(
+        (dayOff) => dayOff.startDate <= today && dayOff.endDate >= today,
+      ),
+    [daysOff, today],
+  );
+
+  const previousDaysOff = useMemo(
+    () => daysOff.filter((dayOff) => dayOff.endDate < today),
+    [daysOff, today],
+  );
 
   useEffect(() => {
     document.title = "Descansos";
@@ -103,19 +133,42 @@ export default function Breaks() {
     content = (
       <EmptySection
         icon={Parasol}
-        title="Aún no tienes días libres"
+        title="Aún no tienes descansos"
         description="Agrega días libres o vacaciones para mantener tu calendario al día."
-        buttonText="Agregar días libres"
+        buttonText="Agregar descanso"
         buttonLink="/app/breaks/new"
       />
     );
   } else {
     content = (
-      <DaysOffTable
-        daysOff={daysOff}
-        onEdit={handleEditDayOff}
-        onDelete={setDayOffToDelete}
-      />
+      <div className="flex w-full flex-col gap-6">
+        {upcomingDaysOff.length > 0 && (
+          <DaysOffSection
+            title="Próximamente"
+            daysOff={upcomingDaysOff}
+            onEdit={handleEditDayOff}
+            onDelete={setDayOffToDelete}
+          />
+        )}
+
+        {currentDaysOff.length > 0 && (
+          <DaysOffSection
+            title="En curso"
+            daysOff={currentDaysOff}
+            onEdit={handleEditDayOff}
+            onDelete={setDayOffToDelete}
+          />
+        )}
+
+        {previousDaysOff.length > 0 && (
+          <DaysOffSection
+            title="Anteriores"
+            daysOff={previousDaysOff}
+            onEdit={handleEditDayOff}
+            onDelete={setDayOffToDelete}
+          />
+        )}
+      </div>
     );
   }
 
@@ -128,7 +181,7 @@ export default function Breaks() {
             to="/app/breaks/new"
             className="shrink-0 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold transition-colors hover:bg-sky-500 cursor-pointer"
           >
-            Agregar días libres
+            Agregar descanso
           </Link>
         )}
       </div>
@@ -151,70 +204,85 @@ export default function Breaks() {
   );
 }
 
-type DaysOffTableProps = {
+type DaysOffSectionProps = {
+  title: string;
   daysOff: DayOff[];
   onEdit: (dayOff: DayOff) => void;
   onDelete: (dayOff: DayOff) => void;
 };
 
-function DaysOffTable({ daysOff, onEdit, onDelete }: DaysOffTableProps) {
+function DaysOffSection({
+  title,
+  daysOff,
+  onEdit,
+  onDelete,
+}: DaysOffSectionProps) {
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[720px] overflow-hidden rounded-lg shadow-md">
-        <table className="w-full bg-gray-800 text-left text-sm text-gray-400">
-          <thead className="bg-gray-700 text-xs uppercase text-gray-400">
-            <tr>
-              <th scope="col" className="px-4 py-3">Nombre</th>
-              <th scope="col" className="px-4 py-3">Inicio</th>
-              <th scope="col" className="px-4 py-3">Fin</th>
-              <th scope="col" className="px-4 py-3">Notas</th>
-              <th scope="col" className="px-4 py-3 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {daysOff.map((dayOff, index) => (
-              <tr
-                key={dayOff.id}
-                className={`border-b border-gray-700 ${
-                  index === daysOff.length - 1 ? "border-b-0" : ""
-                }`}
-              >
-                <th scope="row" className="px-4 py-3 font-medium text-white">
-                  {dayOff.name || "Día libre"}
-                </th>
-                <td className="whitespace-nowrap px-4 py-3 text-gray-300">
-                  {formatDate(dayOff.startDate)}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-gray-300">
-                  {formatDate(dayOff.endDate)}
-                </td>
-                <td className="max-w-xs px-4 py-3 text-gray-300">
-                  <span className="line-clamp-2">{dayOff.notes || "—"}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      type="button"
-                      onClick={() => onEdit(dayOff)}
-                      className="cursor-pointer rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
-                      title="Editar"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(dayOff)}
-                      className="cursor-pointer rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-500/10"
-                      title="Eliminar"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
+    <div className="w-full">
+      <div className="mb-3 flex items-center gap-3">
+        <h2 className="-translate-y-0.5 text-lg font-semibold text-white">{title}</h2>
+        <span className="inline-flex min-h-[1.5rem] items-center justify-center rounded-full bg-gray-700 px-3 text-xs font-medium text-gray-300">
+          {daysOff.length}
+        </span>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="min-w-[720px] overflow-hidden rounded-lg shadow-md">
+          <table className="w-full bg-gray-800 text-left text-sm text-gray-400">
+            <thead className="bg-gray-700 text-xs uppercase text-gray-400">
+              <tr>
+                <th scope="col" className="px-4 py-3">Nombre</th>
+                <th scope="col" className="px-4 py-3">Inicio</th>
+                <th scope="col" className="px-4 py-3">Fin</th>
+                <th scope="col" className="px-4 py-3">Notas</th>
+                <th scope="col" className="px-4 py-3 text-right">Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {daysOff.map((dayOff, index) => (
+                <tr
+                  key={dayOff.id}
+                  className={`border-b border-gray-700 ${
+                    index === daysOff.length - 1 ? "border-b-0" : ""
+                  }`}
+                >
+                  <th scope="row" className="px-4 py-3 font-medium text-white">
+                    {dayOff.name || "Día libre"}
+                  </th>
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-300">
+                    {formatDate(dayOff.startDate)}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-300">
+                    {formatDate(dayOff.endDate)}
+                  </td>
+                  <td className="max-w-xs px-4 py-3 text-gray-300">
+                    <span className="line-clamp-2">{dayOff.notes || "—"}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => onEdit(dayOff)}
+                        className="cursor-pointer rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-white"
+                        title="Editar"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDelete(dayOff)}
+                        className="cursor-pointer rounded-lg p-1.5 text-red-400 transition-colors hover:bg-red-500/10"
+                        title="Eliminar"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -9,6 +9,13 @@ export type DayOff = {
   updatedAt: string;
 };
 
+export type DayOffFormData = {
+  name: string;
+  startDate: string;
+  endDate: string;
+  notes: string;
+};
+
 export type GetDaysOffSuccessResponse = {
   success: true;
   data: DayOff[];
@@ -22,3 +29,32 @@ export type GetDaysOffErrorResponse = {
 export type GetDaysOffByPeriodResponse =
   | GetDaysOffSuccessResponse
   | GetDaysOffErrorResponse;
+
+export type GetDayOffSuccessResponse = {
+  success: true;
+  data: DayOff;
+};
+
+export type GetDayOffErrorResponse = {
+  success: false;
+  message: string;
+};
+
+export type GetDayOffResponse =
+  | GetDayOffSuccessResponse
+  | GetDayOffErrorResponse;
+
+export type SaveDayOffSuccessResponse = {
+  success: true;
+  message: string;
+  data: DayOff;
+};
+
+export type SaveDayOffErrorResponse = {
+  success: false;
+  message: string;
+};
+
+export type SaveDayOffResponse =
+  | SaveDayOffSuccessResponse
+  | SaveDayOffErrorResponse;
