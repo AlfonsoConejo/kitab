@@ -166,6 +166,11 @@ export default function Calendar() {
     });
   }
 
+  /** Returns the active calendar view to the current date. */
+  function moveCalendarToToday() {
+    setCurrentDate(new Date());
+  }
+
   if (!selectedPeriod) {
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-6">
@@ -194,6 +199,9 @@ export default function Calendar() {
             onClick={() => moveCalendar(1)}
           >
             <ChevronRight size={20} />
+          </NavigationButton>
+          <NavigationButton label="Hoy" onClick={moveCalendarToToday}>
+            <span className="px-2">Hoy</span>
           </NavigationButton>
         </div>
 
@@ -241,7 +249,7 @@ function NavigationButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="cursor-pointer rounded-lg p-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
+      className="flex h-9 items-center justify-center rounded-lg bg-gray-800 px-2 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
     >
       {children}
     </button>
