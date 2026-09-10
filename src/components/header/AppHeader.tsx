@@ -112,7 +112,7 @@ export default function AppHeader({user, onOpenMobileMenu}: AppHeaderProps) {
             {
               // Drop down menu
               isProfileMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-64 rounded-lg bg-gray-700 shadow-lg overflow-hidden">
+              <div className="absolute right-0 top-full mt-2 w-64 z-100 rounded-lg bg-gray-700 shadow-lg overflow-hidden">
           
                 <div className="p-4 cursor-default">
                   <p className="text-sm font-medium">{ `${user.firstName} ${user.lastName} `}</p>

@@ -14,10 +14,11 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function Breaks() {
   const navigate = useNavigate();
-  const { selectedPeriod } = usePeriod();
+  const { selectedPeriod, isLoadingPeriod } = usePeriod();
   const [daysOff, setDaysOff] = useState<DayOff[]>([]);
   const [dayOffToDelete, setDayOffToDelete] = useState<DayOff | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadedPeriodId, setLoadedPeriodId] = useState<number | null>(null);
 
   const today = useMemo(() => {
     const currentDate = new Date();
@@ -32,8 +33,6 @@ export default function Breaks() {
     () => daysOff.filter((dayOff) => dayOff.startDate > today),
     [daysOff, today],
   );
-
-  console.log("upcomingDaysOff: ", upcomingDaysOff);
 
   const currentDaysOff = useMemo(
     () =>
@@ -55,6 +54,7 @@ export default function Breaks() {
   useEffect(() => {
     if (!selectedPeriod) {
       setDaysOff([]);
+      setLoadedPeriodId(null);
       setIsLoading(false);
       return;
     }
@@ -85,6 +85,7 @@ export default function Breaks() {
 
         notify("error", "No se pudieron cargar los días libres.");
       } finally {
+        setLoadedPeriodId(periodId);
         setIsLoading(false);
       }
     }
@@ -125,7 +126,11 @@ export default function Breaks() {
   }
 
   let content: ReactNode;
-  if (isLoading) {
+  if (
+    isLoading ||
+    isLoadingPeriod ||
+    (selectedPeriod && loadedPeriodId !== selectedPeriod.id)
+  ) {
     content = <SectionLoader />;
   } else if (!selectedPeriod) {
     content = <NoActivePeriodMessage />;

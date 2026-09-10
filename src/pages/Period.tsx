@@ -21,7 +21,7 @@ interface PeriodSectionProps {
 
 export default function Period() {
   const navigate = useNavigate();
-  const { selectedPeriod, setSelectedPeriod } = usePeriod();
+  const { selectedPeriod, setSelectedPeriod, isLoadingPeriod } = usePeriod();
 
   const [periods, setPeriods] = useState<Period[]>([]);
   const [periodToDelete, setPeriodToDelete] = useState<Period | null>(null);
@@ -144,7 +144,7 @@ export default function Period() {
       </div>
 
       <div className="flex-1">
-        {isLoading ? (
+        {isLoading || isLoadingPeriod ? (
           <SectionLoader />
         ) : periods.length === 0 ? (
           <NoActivePeriodMessage />
