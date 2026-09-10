@@ -249,7 +249,7 @@ function NavigationButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="flex h-9 items-center justify-center rounded-lg bg-gray-800 px-2 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
+      className="flex h-9 items-center justify-center rounded-lg bg-gray-800 px-2 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white cursor-pointer"
     >
       {children}
     </button>

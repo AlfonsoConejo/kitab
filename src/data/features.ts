@@ -21,26 +21,26 @@ const features: Feature[] = [
     },
     {
       id: 4,
+      title: 'Control de vacaciones',
+      description: 'Solicita y gestiona días libres y permisos.',
+      status: 'implemented'
+    },
+    {
+      id: 5,
+      title: 'Calendario de clases',
+      description: 'Visualiza tus horarios en calendario interactivo.',
+      status: 'developing'
+    },
+    {
+      id: 6,
       title: 'Gestor de tareas',
       description: 'Crea y da seguimiento a tareas por materia.',
       status: 'upcoming'
     },
     {
-      id: 5,
+      id: 7,
       title: 'Dashboard diario',
       description: 'Toda la información del día en un vistazo.',
-      status: 'upcoming'
-    },
-    {
-      id: 6,
-      title: 'Control de vacaciones',
-      description: 'Solicita y gestiona días libres y permisos.',
-      status: 'upcoming'
-    },
-    {
-      id: 7,
-      title: 'Calendario de clases',
-      description: 'Visualiza tus horarios en calendario interactivo.',
       status: 'upcoming'
     },
     {
