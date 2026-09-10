@@ -50,7 +50,10 @@ const WEEK_DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const START_HOUR = 0;
 const END_HOUR = 24;
 const HOUR_HEIGHT = 64;
+const CALENDAR_BACKGROUND_RGB = [31, 41, 55] as const;
+const EVENT_COLOR_ALPHA = 32 / 255;
 
+/** Displays the selected academic period in weekly or monthly calendar views. */
 export default function Calendar() {
   const { selectedPeriod } = usePeriod();
   const [view, setView] = useState<CalendarView>("week");
@@ -64,10 +67,23 @@ export default function Calendar() {
   }, []);
 
   useEffect(() => {
-    const updateCurrentTime = () => setNow(new Date());
-    const intervalId = window.setInterval(updateCurrentTime, 60_000);
+    let timeoutId: number;
 
-    return () => window.clearInterval(intervalId);
+    const updateCurrentTime = () => {
+      setNow(new Date());
+
+      const millisecondsUntilNextMinute =
+        60_000 - (Date.now() % 60_000);
+
+      timeoutId = window.setTimeout(
+        updateCurrentTime,
+        millisecondsUntilNextMinute,
+      );
+    };
+
+    updateCurrentTime();
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -79,6 +95,7 @@ export default function Calendar() {
 
     const periodId = selectedPeriod.id;
 
+    /** Loads period classes and associates each one with its subject color. */
     async function fetchCalendarData() {
       try {
         setIsLoading(true);
@@ -134,6 +151,7 @@ export default function Calendar() {
     [currentDate],
   );
 
+  /** Moves the displayed week or month in the requested direction. */
   function moveCalendar(direction: number) {
     setCurrentDate((date) => {
       const nextDate = new Date(date);
@@ -179,7 +197,7 @@ export default function Calendar() {
           </NavigationButton>
         </div>
 
-        <h1 className="capitalize text-xl font-semibold text-white sm:text-2xl">
+        <h1 className="text-xl font-semibold text-white first-letter:uppercase sm:text-2xl">
           {monthLabel}
         </h1>
 
@@ -212,6 +230,7 @@ export default function Calendar() {
   );
 }
 
+/** Renders an accessible button for calendar navigation. */
 function NavigationButton({
   label,
   children,
@@ -229,6 +248,7 @@ function NavigationButton({
   );
 }
 
+/** Renders a button that switches between calendar views. */
 function ViewButton({ active, children, onClick }: ViewButtonProps) {
   const colorClasses = active
     ? "bg-gray-700 text-white shadow-sm"
@@ -245,6 +265,7 @@ function ViewButton({ active, children, onClick }: ViewButtonProps) {
   );
 }
 
+/** Renders the hourly grid for the week containing the current date. */
 function WeekCalendar({ currentDate, classes, now }: WeekCalendarProps) {
   const weekDays = getWeekDays(currentDate);
   const today = toDateKey(new Date());
@@ -320,6 +341,7 @@ function WeekCalendar({ currentDate, classes, now }: WeekCalendarProps) {
   );
 }
 
+/** Renders one daily column with its scheduled classes and current-time marker. */
 function DayColumn({ date, classes, isToday, now }: DayColumnProps) {
   const dayNumber = date.getDay() || 7;
   const scheduledClasses = classes.filter((classItem) =>
@@ -362,9 +384,11 @@ function DayColumn({ date, classes, isToday, now }: DayColumnProps) {
   );
 }
 
+/** Positions and displays a class event within a day column. */
 function ClassEvent({ classItem }: ClassEventProps) {
   const startMinutes = getMinutes(classItem.startTime);
   const endMinutes = getMinutes(classItem.endTime);
+  const location = getClassLocation(classItem);
   const top = Math.max(
     0,
     ((startMinutes - START_HOUR * 60) / 60) * HOUR_HEIGHT,
@@ -385,20 +409,21 @@ function ClassEvent({ classItem }: ClassEventProps) {
         top: `${top}px`,
         height: `${height}px`,
         borderColor: classItem.color,
-        backgroundColor: `${classItem.color}20`,
+        backgroundColor: getSolidEventColor(classItem.color),
       }}
     >
       <p className="font-semibold" style={{ color: classItem.color }}>
         {formatTime(classItem.startTime)}
       </p>
       <p className="truncate font-medium text-white">{classItem.subjectName}</p>
-      {classItem.classroom && (
-        <p className="truncate text-gray-300">{classItem.classroom}</p>
+      {location && (
+        <p className="truncate text-gray-300">{location}</p>
       )}
     </div>
   );
 }
 
+/** Renders the six-week grid for the month containing the current date. */
 function MonthCalendar({ currentDate, classes }: MonthCalendarProps) {
   const days = getMonthGridDays(currentDate);
   const today = toDateKey(new Date());
@@ -449,10 +474,12 @@ function MonthCalendar({ currentDate, classes }: MonthCalendarProps) {
                       className="truncate rounded px-1.5 py-1 text-xs font-medium text-white"
                       style={{
                         borderLeft: `3px solid ${classItem.color}`,
-                        backgroundColor: `${classItem.color}20`,
+                        backgroundColor: getSolidEventColor(classItem.color),
                       }}
                     >
                       {formatTime(classItem.startTime)} {classItem.subjectName}
+                      {getClassLocation(classItem) &&
+                        ` · ${getClassLocation(classItem)}`}
                     </div>
                   ))}
 
@@ -471,8 +498,11 @@ function MonthCalendar({ currentDate, classes }: MonthCalendarProps) {
   );
 }
 
+/** Returns the Monday-through-Sunday dates for the week containing a date. */
 function getWeekDays(date: Date) {
   const weekStart = new Date(date);
+  weekStart.setHours(0, 0, 0, 0);
+  
   const day = weekStart.getDay() || 7;
 
   weekStart.setDate(weekStart.getDate() - day + 1);
@@ -480,6 +510,7 @@ function getWeekDays(date: Date) {
   return Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
 }
 
+/** Returns the 42 dates needed to render a complete six-week month grid. */
 function getMonthGridDays(date: Date) {
   const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
   const firstDayNumber = firstDay.getDay() || 7;
@@ -488,6 +519,7 @@ function getMonthGridDays(date: Date) {
   return Array.from({ length: 42 }, (_, index) => addDays(gridStart, index));
 }
 
+/** Returns a new date offset by the specified number of calendar days. */
 function addDays(date: Date, days: number) {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
@@ -495,6 +527,7 @@ function addDays(date: Date, days: number) {
   return result;
 }
 
+/** Converts a local date into a stable YYYY-MM-DD comparison key. */
 function toDateKey(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -503,12 +536,66 @@ function toDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+/** Converts an HH:MM time string into minutes since midnight. */
 function getMinutes(time: string) {
   const [hours, minutes] = time.split(":").map(Number);
 
   return hours * 60 + minutes;
 }
 
+/** Returns the displayable location for an in-person or online class. */
+function getClassLocation(classItem: CalendarClass) {
+  if (classItem.mode === "online") {
+    return "En línea";
+  }
+
+  return classItem.classroom;
+}
+
+/** Formats a 24-hour value as a 12-hour label for the weekly time axis. */
 function formatHour(hour: number) {
-  return `${hour % 12 || 12} ${hour < 12 ? "AM" : "PM"}`;
+  const formattedHour = hour % 12 || 12;
+  const period = hour < 12 ? "AM" : "PM";
+
+  return `${formattedHour} ${period}`;
+}
+
+/** Blends a subject color with the calendar background for event cards. */
+function getSolidEventColor(color: string) {
+  const subjectColor = hexToRgb(color);
+
+  if (!subjectColor) {
+    return color;
+  }
+
+  const blendedColor = subjectColor.map((channel, index) =>
+    Math.round(
+      channel * EVENT_COLOR_ALPHA +
+        CALENDAR_BACKGROUND_RGB[index] * (1 - EVENT_COLOR_ALPHA),
+    ),
+  );
+
+  return `rgb(${blendedColor.join(", ")})`;
+}
+
+/** Parses a three- or six-digit hexadecimal color into RGB channels. */
+function hexToRgb(color: string) {
+  const hexColor = color.replace("#", "");
+  const normalizedColor =
+    hexColor.length === 3
+      ? hexColor
+          .split("")
+          .map((character) => character + character)
+          .join("")
+      : hexColor;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(normalizedColor)) {
+    return null;
+  }
+
+  return [
+    Number.parseInt(normalizedColor.slice(0, 2), 16),
+    Number.parseInt(normalizedColor.slice(2, 4), 16),
+    Number.parseInt(normalizedColor.slice(4, 6), 16),
+  ];
 }
