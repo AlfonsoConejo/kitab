@@ -20,11 +20,12 @@ type SubjectWithClasses = Subject & {
 export default function Subjects() {
   const navigate = useNavigate();
 
-  const { selectedPeriod } = usePeriod();
+  const { selectedPeriod, isLoadingPeriod } = usePeriod();
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadedPeriodId, setLoadedPeriodId] = useState<number | null>(null);
 
   // Set the document title
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function Subjects() {
     if (!selectedPeriod) {
       setSubjects([]);
       setClasses([]);
+      setLoadedPeriodId(null);
       setIsLoading(false);
       return;
     }
@@ -94,6 +96,7 @@ export default function Subjects() {
           notify("error", "Error de conexión.");
         }
       } finally {
+        setLoadedPeriodId(periodId);
         setIsLoading(false);
       }
     }
@@ -151,7 +154,11 @@ export default function Subjects() {
 
   // Render content based on state
   let content: ReactNode;
-  if (isLoading) {
+  if (
+    isLoading ||
+    isLoadingPeriod ||
+    (selectedPeriod && loadedPeriodId !== selectedPeriod.id)
+  ) {
     content = <SectionLoader />;
   } else if (!selectedPeriod) {
     content = <NoActivePeriodMessage />;

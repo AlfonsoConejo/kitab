@@ -7,7 +7,14 @@ import { apiFetch } from "@/services/apiFetch";
 import type { Class, GetClassesByPeriodResponse } from "@/types/class";
 import type { GetSubjectsByPeriodResponse } from "@/types/subject";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 type CalendarView = "week" | "month";
 type CalendarClass = Class & { color: string };
@@ -55,12 +62,13 @@ const EVENT_COLOR_ALPHA = 32 / 255;
 
 /** Displays the selected academic period in weekly or monthly calendar views. */
 export default function Calendar() {
-  const { selectedPeriod } = usePeriod();
+  const { selectedPeriod, isLoadingPeriod } = usePeriod();
   const [view, setView] = useState<CalendarView>("week");
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [now, setNow] = useState(() => new Date());
   const [classes, setClasses] = useState<CalendarClass[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadedPeriodId, setLoadedPeriodId] = useState<number | null>(null);
 
   useEffect(() => {
     document.title = "Calendario";
@@ -89,6 +97,7 @@ export default function Calendar() {
   useEffect(() => {
     if (!selectedPeriod) {
       setClasses([]);
+      setLoadedPeriodId(null);
       setIsLoading(false);
       return;
     }
@@ -135,6 +144,7 @@ export default function Calendar() {
 
         notify("error", "No se pudo cargar el calendario.");
       } finally {
+        setLoadedPeriodId(periodId);
         setIsLoading(false);
       }
     }
@@ -169,6 +179,19 @@ export default function Calendar() {
   /** Returns the active calendar view to the current date. */
   function moveCalendarToToday() {
     setCurrentDate(new Date());
+  }
+
+  if (isLoadingPeriod) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col gap-6">
+        <h1 className="text-2xl font-semibold text-white sm:text-3xl">
+          Calendario
+        </h1>
+        <div className="flex-1">
+          <SectionLoader />
+        </div>
+      </div>
+    );
   }
 
   if (!selectedPeriod) {
@@ -226,7 +249,7 @@ export default function Calendar() {
       </header>
 
       <div className="min-h-0 flex-1">
-        {isLoading ? (
+        {isLoading || loadedPeriodId !== selectedPeriod.id ? (
           <SectionLoader />
         ) : view === "week" ? (
           <WeekCalendar currentDate={currentDate} classes={classes} now={now} />
@@ -275,6 +298,8 @@ function ViewButton({ active, children, onClick }: ViewButtonProps) {
 
 /** Renders the hourly grid for the week containing the current date. */
 function WeekCalendar({ currentDate, classes, now }: WeekCalendarProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const hasSetInitialScrollPosition = useRef(false);
   const weekDays = getWeekDays(currentDate);
   const today = toDateKey(new Date());
   const hours = Array.from(
@@ -282,8 +307,28 @@ function WeekCalendar({ currentDate, classes, now }: WeekCalendarProps) {
     (_, index) => START_HOUR + index,
   );
 
+  useLayoutEffect(() => {
+    if (hasSetInitialScrollPosition.current || !scrollContainerRef.current) {
+      return;
+    }
+
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const currentTimeTop =
+      ((currentMinutes - START_HOUR * 60) / 60) * HOUR_HEIGHT;
+    const scrollContainer = scrollContainerRef.current;
+
+    scrollContainer.scrollTop = Math.max(
+      0,
+      currentTimeTop - scrollContainer.clientHeight / 3,
+    );
+    hasSetInitialScrollPosition.current = true;
+  }, [now]);
+
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-auto rounded-xs border border-gray-700 bg-gray-800">
+    <div
+      ref={scrollContainerRef}
+      className="flex h-full min-h-0 flex-col overflow-auto rounded-xs border border-gray-700 bg-gray-800"
+    >
       <div className="min-w-[850px]">
         <div className="sticky top-0 z-20 grid grid-cols-[68px_repeat(7,minmax(110px,1fr))] bg-gray-800">
           <div />
@@ -438,7 +483,7 @@ function MonthCalendar({ currentDate, classes }: MonthCalendarProps) {
   const currentMonth = currentDate.getMonth();
 
   return (
-    <div className="overflow-auto rounded-xl border border-gray-700 bg-gray-800">
+    <div className="overflow-auto rounded-xs border border-gray-700 bg-gray-800">
       <div className="min-w-[700px]">
         <div className="grid grid-cols-7 border-b border-gray-700">
           {WEEK_DAYS.map((day) => (
