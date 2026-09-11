@@ -524,7 +524,7 @@ function MonthCalendar({ currentDate, classes }: MonthCalendarProps) {
                   {scheduledClasses.slice(0, 3).map((classItem) => (
                     <div
                       key={classItem.id}
-                      className="truncate rounded px-1.5 py-1 text-xs font-medium text-white"
+                      className="truncate px-1.5 py-1 text-xs font-medium text-white"
                       style={{
                         borderLeft: `3px solid ${classItem.color}`,
                         backgroundColor: getSolidEventColor(classItem.color),

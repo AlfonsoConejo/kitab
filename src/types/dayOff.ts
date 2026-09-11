@@ -1,7 +1,10 @@
+export type DayOffType = "day_off" | "vacation";
+
 export type DayOff = {
   id: number;
   periodId: number;
   name: string;
+  type: DayOffType;
   startDate: string;
   endDate: string;
   notes: string | null;
@@ -11,6 +14,7 @@ export type DayOff = {
 
 export type DayOffFormData = {
   name: string;
+  type: DayOffType;
   startDate: string;
   endDate: string;
   notes: string;

@@ -232,11 +232,12 @@ function DaysOffSection({
       </div>
 
       <div className="overflow-x-auto">
-        <div className="min-w-[720px] overflow-hidden rounded-lg shadow-md">
+        <div className="min-w-[820px] overflow-hidden rounded-lg shadow-md">
           <table className="w-full bg-gray-800 text-left text-sm text-gray-400">
             <thead className="bg-gray-700 text-xs uppercase text-gray-400">
               <tr>
                 <th scope="col" className="px-4 py-3">Nombre</th>
+                <th scope="col" className="px-4 py-3">Tipo</th>
                 <th scope="col" className="px-4 py-3">Inicio</th>
                 <th scope="col" className="px-4 py-3">Fin</th>
                 <th scope="col" className="px-4 py-3">Notas</th>
@@ -254,6 +255,11 @@ function DaysOffSection({
                   <th scope="row" className="px-4 py-3 font-medium text-white">
                     {dayOff.name || "Día libre"}
                   </th>
+                  <td className="px-4 py-3">
+                    <span className="whitespace-nowrap text-gray-300">
+                      {dayOff.type === "vacation" ? "Vacaciones" : "Día libre"}
+                    </span>
+                  </td>
                   <td className="whitespace-nowrap px-4 py-3 text-gray-300">
                     {formatDate(dayOff.startDate)}
                   </td>

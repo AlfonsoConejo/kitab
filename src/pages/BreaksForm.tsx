@@ -1,5 +1,6 @@
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { ChevronDown } from "lucide-react";
 import SectionLoader from "@/components/SectionLoader";
 import { usePeriod } from "@/context/PeriodContext";
 import { notify } from "@/notify";
@@ -12,6 +13,7 @@ import type {
 
 const initialFormData: DayOffFormData = {
   name: "",
+  type: "day_off",
   startDate: "",
   endDate: "",
   notes: "",
@@ -68,6 +70,7 @@ export default function BreaksForm() {
 
         setFormData({
           name: data.data.name,
+          type: data.data.type,
           startDate: data.data.startDate,
           endDate: data.data.endDate,
           notes: data.data.notes ?? "",
@@ -104,9 +107,11 @@ export default function BreaksForm() {
         ...currentFormData,
         startDate: value,
         endDate:
-          currentFormData.endDate && currentFormData.endDate < value
-            ? ""
-            : currentFormData.endDate,
+          currentFormData.type === "day_off"
+            ? value
+            : currentFormData.endDate && currentFormData.endDate < value
+              ? ""
+              : currentFormData.endDate,
       }));
       return;
     }
@@ -114,6 +119,16 @@ export default function BreaksForm() {
     setFormData((currentFormData) => ({
       ...currentFormData,
       [name]: value,
+    }));
+  }
+
+  function handleTypeChange(event: ChangeEvent<HTMLSelectElement>) {
+    const type = event.target.value as DayOffFormData["type"];
+
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      type,
+      endDate: type === "day_off" ? currentFormData.startDate : currentFormData.endDate,
     }));
   }
 
@@ -126,6 +141,7 @@ export default function BreaksForm() {
 
     const payload = {
       name: formData.name.trim(),
+      type: formData.type,
       startDate: formData.startDate,
       endDate: formData.endDate,
       notes: formData.notes.trim() || null,
@@ -220,10 +236,37 @@ export default function BreaksForm() {
                 />
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="type" className="mb-2 text-sm font-medium text-white">
+                  Tipo de descanso
+                </label>
+                <div className="relative">
+                  <select
+                    id="type"
+                    name="type"
+                    value={formData.type}
+                    onChange={handleTypeChange}
+                    className="block w-full appearance-none rounded-lg border border-gray-600 bg-gray-700 p-2.5 pr-10 text-sm text-white outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="day_off">Día libre</option>
+                    <option value="vacation">Vacaciones</option>
+                  </select>
+                  <ChevronDown
+                    aria-hidden="true"
+                    size={18}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                </div>
+              </div>
+
+              <div
+                className={`grid gap-6 ${
+                  formData.type === "day_off" ? "md:grid-cols-1" : "md:grid-cols-2"
+                }`}
+              >
                 <div className="flex flex-col gap-2">
                   <label htmlFor="startDate" className="mb-2 text-sm font-medium text-white">
-                    Fecha de inicio
+                    {formData.type === "day_off" ? "Fecha" : "Fecha de inicio"}
                   </label>
                   <input
                     id="startDate"
@@ -231,28 +274,34 @@ export default function BreaksForm() {
                     type="date"
                     value={formData.startDate}
                     min={selectedPeriod.startDate}
-                    max={formData.endDate || selectedPeriod.endDate}
+                    max={
+                      formData.type === "day_off"
+                        ? selectedPeriod.endDate
+                        : formData.endDate || selectedPeriod.endDate
+                    }
                     onChange={handleChange}
                     className="block w-full rounded-lg border border-gray-600 bg-gray-700 p-2.5 text-sm text-white outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="endDate" className="mb-2 text-sm font-medium text-white">
+                {formData.type === "vacation" && (
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="endDate" className="mb-2 text-sm font-medium text-white">
                     Fecha de término
                   </label>
-                  <input
-                    id="endDate"
-                    name="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    min={formData.startDate || selectedPeriod.startDate}
-                    max={selectedPeriod.endDate}
-                    disabled={!formData.startDate}
-                    onChange={handleChange}
-                    className="block w-full rounded-lg border border-gray-600 bg-gray-700 p-2.5 text-sm text-white outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                </div>
+                    <input
+                      id="endDate"
+                      name="endDate"
+                      type="date"
+                      value={formData.endDate}
+                      min={formData.startDate || selectedPeriod.startDate}
+                      max={selectedPeriod.endDate}
+                      disabled={!formData.startDate}
+                      onChange={handleChange}
+                      className="block w-full rounded-lg border border-gray-600 bg-gray-700 p-2.5 text-sm text-white outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
