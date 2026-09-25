@@ -76,22 +76,20 @@ export default function SubjectDetails() {
 
         const [externalRes, internalRes] = await Promise.all([
           apiFetch(
-            `/api/subjects/classes/check-external-conflicts`,
+            `/api/subjects/${subjectData.data.id}/classes/conflicts/external`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                periodId: subjectData.data.periodId,
-                subjectId: subjectData.data.id,
                 classes,
               }),
             }
           ),
 
           apiFetch(
-            `/api/subjects/classes/check-internal-conflicts`,
+            `/api/subjects/classes/conflicts/internal`,
             {
               method: "POST",
               headers: {

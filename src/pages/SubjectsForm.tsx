@@ -122,22 +122,20 @@ export default function SubjectsForm() {
 
         const [externalRes, internalRes] = await Promise.all([
           apiFetch(
-            `/api/subjects/classes/check-external-conflicts`,
+            `/api/subjects/${subjectData.data.id}/classes/conflicts/external`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                periodId: subjectData.data.periodId,
-                subjectId: subjectData.data.id,
                 classes,
               }),
             }
           ),
 
           apiFetch(
-            `/api/subjects/classes/check-internal-conflicts`,
+            `/api/subjects/classes/conflicts/internal`,
             {
               method: "POST",
               headers: {
@@ -381,16 +379,18 @@ export default function SubjectsForm() {
 
   const recalculateExternalConflicts = async (updatedClass: FormClass, calculationId: number) => {
     try {
+      const endpoint = subject.id
+        ? `/api/subjects/${subject.id}/classes/conflicts/external`
+        : `/api/periods/${subject.periodId}/classes/conflicts/external`;
+
       const res = await apiFetch(
-        `/api/subjects/classes/check-external-conflicts`,
+        endpoint,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            periodId: subject.periodId,
-            ...(subject.id && { subjectId: subject.id }),
             classes: [updatedClass],
           }),
         }
@@ -426,7 +426,7 @@ export default function SubjectsForm() {
   const recalculateInternalConflicts = async (updatedClasses: FormClass[], calculationId: number) => {
     try {
       const res = await apiFetch(
-        `/api/subjects/classes/check-internal-conflicts`,
+        `/api/subjects/classes/conflicts/internal`,
         {
           method: "POST",
           headers: {
