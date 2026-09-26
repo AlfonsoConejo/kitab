@@ -98,13 +98,9 @@ export default function Breaks() {
   }
 
   async function handleDeleteDayOff(dayOff: DayOff) {
-    if (!selectedPeriod) {
-      return;
-    }
-
     try {
       const response = await apiFetch(
-        `/api/periods/${selectedPeriod.id}/days-off/${dayOff.id}`,
+        `/api/days-off/${dayOff.id}`,
         { method: "DELETE" },
       );
 

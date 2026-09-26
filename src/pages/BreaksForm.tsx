@@ -49,16 +49,14 @@ export default function BreaksForm() {
   }, [isEditMode]);
 
   useEffect(() => {
-    if (!isEditMode || !selectedPeriod) {
+    if (!isEditMode || !id) {
       return;
     }
-
-    const periodId = selectedPeriod.id;
 
     async function fetchDayOff() {
       try {
         const response = await apiFetch(
-          `/api/periods/${periodId}/days-off/${id}`,
+          `/api/days-off/${id}`,
         );
         const data: GetDayOffResponse = await response.json();
 
@@ -89,7 +87,7 @@ export default function BreaksForm() {
     }
 
     void fetchDayOff();
-  }, [id, isEditMode, navigate, selectedPeriod]);
+  }, [id, isEditMode, navigate]);
 
   const isSubmitDisabled =
     !formData.name.trim() ||
@@ -135,7 +133,7 @@ export default function BreaksForm() {
   async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!selectedPeriod) {
+    if ((!isEditMode && !selectedPeriod) || (isEditMode && !id)) {
       return;
     }
 
@@ -148,8 +146,8 @@ export default function BreaksForm() {
     };
 
     const endpoint = isEditMode
-      ? `/api/periods/${selectedPeriod.id}/days-off/${id}`
-      : `/api/periods/${selectedPeriod.id}/days-off`;
+      ? `/api/days-off/${id}`
+      : `/api/periods/${selectedPeriod!.id}/days-off`;
     const method = isEditMode ? "PUT" : "POST";
 
     setIsSending(true);
