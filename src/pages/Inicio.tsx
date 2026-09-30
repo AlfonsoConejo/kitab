@@ -1,16 +1,56 @@
 import { useEffect, useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import demo_periodos from "../assets/demo_periodos.png"
-import { ChevronDown, ChevronRight, Play } from "lucide-react";
+import subjectsView from "../assets/subjects_view.png";
+import calendarView from "../assets/calendar_view.png";
+import breaksView from "../assets/breaks_view.png";
+import { BookOpen, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Coffee, Play } from "lucide-react";
 import allSprints from '../data/sprints';
 import faqs from "@/data/faqs";
+
+const productFeatures = [
+  {
+    title: "Tus materias y clases, bien organizadas",
+    description: "Registra cada materia, sus horarios y detalles para tener tu carga académica clara desde el inicio del semestre.",
+    image: subjectsView,
+    alt: "Vista de materias y clases en Kitab",
+    icon: BookOpen,
+  },
+  {
+    title: "Visualiza toda tu semana",
+    description: "Consulta tus clases en un calendario semanal o mensual y entiende tu horario en un vistazo.",
+    image: calendarView,
+    alt: "Vista de calendario semanal en Kitab",
+    icon: CalendarDays,
+  },
+  {
+    title: "Planea también tus descansos",
+    description: "Aparta tiempo para desconectarte y mantén un semestre más equilibrado con tus días libres y vacaciones siempre a la vista.",
+    image: breaksView,
+    alt: "Vista de descansos en Kitab",
+    icon: Coffee,
+  },
+];
 
 export default function Inicio() {
 
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
+  };
+
+  const showPreviousFeature = () => {
+    setActiveFeatureIndex((currentIndex) =>
+      currentIndex === 0 ? productFeatures.length - 1 : currentIndex - 1
+    );
+  };
+
+  const showNextFeature = () => {
+    setActiveFeatureIndex((currentIndex) =>
+      currentIndex === productFeatures.length - 1 ? 0 : currentIndex + 1
+    );
   };
 
   useEffect(() => {
@@ -126,6 +166,112 @@ export default function Inicio() {
             </div>
 
           </div>
+        </section>
+
+        {/* New product features carousel */}
+        <section className="w-full px-6 pt-16 sm:pt-18 pb-6 overflow-hidden">
+          {(() => {
+            const activeFeature = productFeatures[activeFeatureIndex];
+            const previousFeature = productFeatures[
+              activeFeatureIndex === 0 ? productFeatures.length - 1 : activeFeatureIndex - 1
+            ];
+            const nextFeature = productFeatures[
+              activeFeatureIndex === productFeatures.length - 1 ? 0 : activeFeatureIndex + 1
+            ];
+
+            return (
+              <div className="mx-auto max-w-6xl">
+                <div className="mx-auto max-w-2xl text-center">
+                  <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+                    Nuevas funcionalidades
+                  </h2>
+                </div>
+
+                <div className="relative mt-10 overflow-hidden pb-2 sm:mt-12">
+                  <div className="pointer-events-none absolute left-0 top-4 z-10 hidden h-[calc(100%-1rem)] w-[22%] overflow-hidden rounded-r-xl opacity-70 lg:block">
+                    <img src={previousFeature.image} alt="" className="h-full w-full object-cover object-left" />
+                  </div>
+
+                  <div className="pointer-events-none absolute right-0 top-4 z-10 hidden h-[calc(100%-1rem)] w-[22%] overflow-hidden rounded-l-xl opacity-70 lg:block">
+                    <img src={nextFeature.image} alt="" className="h-full w-full object-cover object-right" />
+                  </div>
+
+                  <div className="relative z-20 mx-auto w-full overflow-hidden border border-white/10 bg-slate-950 shadow-xl shadow-black/30 lg:w-[64%]">
+                    <img
+                      key={activeFeature.image}
+                      src={activeFeature.image}
+                      alt={activeFeature.alt}
+                      className="h-auto w-full"
+                    />
+
+                    <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2">
+                      {productFeatures.map((feature, index) => (
+                        <button
+                          key={feature.title}
+                          type="button"
+                          onClick={() => setActiveFeatureIndex(index)}
+                          className={`h-2.5 rounded-full border border-white/40 transition-all cursor-pointer ${
+                            index === activeFeatureIndex
+                              ? "w-7 bg-white"
+                              : "w-2.5 bg-white/50 hover:bg-white/80"
+                            }`}
+                            aria-label={`Mostrar: ${feature.title}`}
+                            aria-current={index === activeFeatureIndex ? "true" : undefined}
+                          />
+                        ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={showPreviousFeature}
+                    className="absolute left-1 top-1/2 z-30 hidden -translate-y-1/2 rounded-lg border border-white/15 bg-slate-800/90 p-2 text-white shadow-sm transition hover:bg-slate-700 lg:block cursor-pointer"
+                    aria-label="Ver funcionalidad anterior"
+                  >
+                    <ChevronLeft className="size-5" aria-hidden="true" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={showNextFeature}
+                    className="absolute right-1 top-1/2 z-30 hidden -translate-y-1/2 rounded-lg border border-white/15 bg-slate-800/90 p-2 text-white shadow-sm transition hover:bg-slate-700 lg:block cursor-pointer"
+                    aria-label="Ver siguiente funcionalidad"
+                  >
+                    <ChevronRight className="size-5" aria-hidden="true" />
+                  </button>
+                </div>
+
+                <div className="mx-auto mt-6 max-w-2xl text-center">
+                  <h3 className="text-xl font-semibold text-white md:text-2xl">
+                    {activeFeature.title}
+                  </h3>
+                  <p className="mt-3 text-slate-300">
+                    {activeFeature.description}
+                  </p>
+                </div>
+
+                <div className="mt-6 flex justify-center gap-3 lg:hidden">
+                  <button
+                    type="button"
+                    onClick={showPreviousFeature}
+                    className="rounded-lg border border-white/15 bg-slate-800 p-2 text-white transition hover:bg-slate-700 cursor-pointer"
+                    aria-label="Ver funcionalidad anterior"
+                  >
+                    <ChevronLeft className="size-5" aria-hidden="true" />
+                  </button>
+                    
+                  <button
+                    type="button"
+                    onClick={showNextFeature}
+                    className="rounded-lg border border-white/15 bg-slate-800 p-2 text-white transition hover:bg-slate-700 cursor-pointer"
+                    aria-label="Ver siguiente funcionalidad"
+                  >
+                    <ChevronRight className="size-5" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
         </section>
 
         {/* Demo Section */}

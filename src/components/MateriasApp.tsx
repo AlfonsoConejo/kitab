@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect } from 'react';
 
 type Clase = {
   id: number;
@@ -47,6 +48,10 @@ const priorityColors: Record<TaskPriority, string> = {
 };
 
 const MateriasApp = () => {
+
+  useEffect(() => {
+      document.title = "Tablero";
+    }, []);
   const clasesDelDia: Clase[] = [
     { id: 1, materia: "Cálculo Diferencial", hora: "08:00 - 10:00", salon: "Aula 402" },
     { id: 2, materia: "Estructura de Datos", hora: "10:30 - 12:30", salon: "Lab B" },
